@@ -1,0 +1,4 @@
+# Here we're going to test formatted string a little bit more complicated
+print(f"This { "is" } a { "simple" + " " + "statement" } by { "Xiaoh" }")
+print(f"The result of (3 * 4) * (6 * 16) + 1919810 // 114514 is { (3 * 4) * (6 * 16) + 1919810 // 114514 }")
+print(f"{ f"This is a" } simple statement")

@@ -1,0 +1,7 @@
+Formatted string with integer 114514 is correct.
+Formatted string with boolean True is correct.
+Formatted string with string Hello World is correct.
+Formatted string with floating number 1.000000 is correct.
+Formatted string without formatting is correct.
+Formatted string without strings is also correct.
+Formatted string with complicated integer expression -1138630 is also correct.

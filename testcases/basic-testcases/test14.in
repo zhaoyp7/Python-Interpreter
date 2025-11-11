@@ -1,0 +1,7 @@
+print(f"Formatted string with integer { 114514 } is correct.")
+print(f"Formatted string with boolean { True } is correct.")
+print(f"Formatted string with string { "Hello World" } is correct.")
+print(f"Formatted string with floating number { 1.0 } is correct.")
+print(f"Formatted string without formatting is correct.")
+print(f"{ "Formatted string without strings is also correct." }")
+print(f"Formatted string with complicated integer expression { 114514 + 666666 - 1919810 } is also correct.")
