@@ -6,15 +6,25 @@
 #include "Python3ParserBaseVisitor.h"
 #include <any>
 
+using int2048 = long long;
+
 struct Parameter{
 	std::string name;
 	std::any val;
 };
-
 struct Function{
 	Python3Parser::SuiteContext *suite;
 	std::vector <Parameter> parameter_list;
 };
+
+bool AnyToBool (std::any) ;
+double AnyToDouble (std::any) ;
+int2048 AnyToInt (std::any) ;
+std::string AnyToString (std::any) ;
+double StringToDouble (std::string) ;
+std::string DoubleToString(double) ;
+std::string IntToString(int2048) ;
+int2048 StringToInt(std::string) ;
 
 class EvalVisitor : public Python3ParserBaseVisitor {
 private:
