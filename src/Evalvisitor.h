@@ -6,7 +6,22 @@
 #include "Python3ParserBaseVisitor.h"
 #include <any>
 
+struct Parameter{
+	std::string name;
+	std::any val;
+};
+
+struct Function{
+	Python3Parser::SuiteContext *suite;
+	std::vector <Parameter> parameter_list;
+};
+
 class EvalVisitor : public Python3ParserBaseVisitor {
+private:
+  std::vector <std::map<std::string, std::any>> variables_stack;
+  std::any GetValue(std::any);
+  std::map<std::string, Function> functions;
+public:
 	// TODO: override all methods of Python3ParserBaseVisitor
 	std::any visitFile_input(Python3Parser::File_inputContext *) override ;
 	std::any visitFuncdef(Python3Parser::FuncdefContext *) override ;
