@@ -15,6 +15,7 @@ struct Parameter{
 struct Function{
 	Python3Parser::SuiteContext *suite;
 	std::vector <Parameter> parameter_list;
+	void InitFunction(std::string, std::vector<std::any>) ;
 };
 
 bool AnyToBool (std::any) ;
@@ -30,6 +31,8 @@ class EvalVisitor : public Python3ParserBaseVisitor {
 private:
   std::vector <std::map<std::string, std::any>> variables_stack;
   std::any GetValue(std::any);
+  void SetValue(std::string, std::any);
+  void CheckVariable(std::any&);
   std::map<std::string, Function> functions;
 public:
 	// TODO: override all methods of Python3ParserBaseVisitor
