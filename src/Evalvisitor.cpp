@@ -263,6 +263,8 @@ std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   ans.return_val = visit(ctx->testlist());
   return ans;
 }
+
+
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   if (ctx->if_stmt() != nullptr) {
     return visit(ctx->if_stmt());
@@ -274,9 +276,47 @@ std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ct
 }
 
 
-std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {}
-std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {}
-std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {}
+std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
+  std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
+  std::vector<Python3Parser::SuiteContext *> suite_vector = ctx->suite();
+  for (int i = 0; i < (int) test_vector.size(); i++) {
+    if (AnyToBool(visit(test_vector[i]))) {
+      return visit(suite_vector[i]);
+    }
+  }
+  if (test_vector.size() != suite_vector.size()) {
+    return visit(suite_vector.back());
+  }
+  return 0;
+}
+std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
+  while (AnyToBool(ctx->test())) {
+    std::any ans = visit(ctx->suite());
+    if (ans.type() == typeid(Control)) {
+      Control res = std::any_cast<Control>(ans);
+      if (res.op == 2) {
+        return 0;
+      } else if (res.op == 3) {
+        return res;
+      }
+    }
+  }
+  return 0;
+}
+std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
+  if (ctx->simple_stmt() != nullptr) {
+    return visit(ctx->simple_stmt());
+  } else {
+    std::vector<Python3Parser::StmtContext *> stmt_vector = ctx->stmt();
+    for (int i = 0; i < stmt_vector.size(); i++) {
+      std::any tmp = visit(stmt_vector[i]);
+      if (tmp.type() == typeid(Control)) {
+        return tmp;
+      }
+    }
+  }
+  return 0;
+}
 
 
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
@@ -481,6 +521,7 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
       ans = AnyToInt(ans) % AnyToInt(tmp);
     }
   }
+  return 0 ;
 }
 std::any EvalVisitor::visitMuldivmod_op(Python3Parser::Muldivmod_opContext *ctx) {
   if (ctx->STAR() != nullptr) {
@@ -562,6 +603,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   } else {
     return visit(ctx->atom());
   }
+  return 0 ;
 }
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
   if (ctx->arglist() != nullptr) {
@@ -614,7 +656,6 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
 }
 std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {}
 std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {}
-
 std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   std::vector<Python3Parser::ArgumentContext *> argument_vector =  ctx->argument();
   int sz = argument_vector.size();
