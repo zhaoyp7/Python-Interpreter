@@ -240,12 +240,29 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {}
 std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {}
 
 
-std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {}
-std::any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {}
-std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {}
-std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {}
-
-
+std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
+  if (ctx->break_stmt() != nullptr) {
+    return visit(ctx->break_stmt());
+  } else if (ctx->continue_stmt()) {
+    return visit(ctx->continue_stmt());
+  } else if (ctx->return_stmt()) {
+    return visit(ctx->return_stmt());
+  }
+  return 0;
+}
+std::any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {
+  Control ans(2);
+  return ans;
+}
+std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {
+  Control ans(1);
+  return ans;
+}
+std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
+  Control ans(3);
+  ans.return_val = visit(ctx->testlist());
+  return ans;
+}
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   if (ctx->if_stmt() != nullptr) {
     return visit(ctx->if_stmt());
@@ -497,11 +514,11 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
 std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   if (ctx->trailer() != nullptr) {
     std::string name = AnyToString(visit(ctx->atom()));
-    std::vector <std::any> trailer_vector = std::any_cast<std::vector <std::any>> visit(ctx->trailer());
+    std::vector <std::any> trailer_vector = std::any_cast<std::vector <std::any>>(visit(ctx->trailer()));
     if (name == "int") {
       return AnyToInt(trailer_vector[0]);
     } else if (name == "str") {
-      return AnyToString()(trailer_vector[0]);
+      return AnyToString(trailer_vector[0]);
     } else if (name == "bool") {
       return AnyToBool(trailer_vector[0]);
     } else if (name == "float") {

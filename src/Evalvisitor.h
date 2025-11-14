@@ -16,6 +16,12 @@ struct Function{
 	Python3Parser::SuiteContext *suite;
 	std::vector <Parameter> parameter_list;
 };
+struct Control{
+	Control(){op = 0;return_val = std::any();}
+	Control(int op_val){op = op_val;return_val = std::any();}
+	int op;//1:continue 2:break 3:return 0:otherwise
+	std::any return_val;
+};
 
 bool AnyToBool (std::any) ;
 double AnyToDouble (std::any) ;
