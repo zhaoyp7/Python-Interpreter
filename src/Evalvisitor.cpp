@@ -128,8 +128,27 @@ int2048 StringToInt (std::string str) {
   return flag * ans;
 } 
 
-void Function::InitFunction(std::string, std::vector<std::any>) {
-  
+void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
+  std::map <std::string, int> vis;
+  AddVariableStack();
+  for (int i = 0; i < (int)val.size(); i++) {
+    if (val[i].type() == typeid(std::pair<std::string, std::any>)) {
+      auto tmp = std::any_cast<std::pair<std::string, std::any>>(val[i]);
+      vis[tmp.first] = 1;
+      SetValue(tmp.first, tmp.second);
+    } else {
+      std::string variable_name = functions[name].parameter_list[i].name;
+      vis[variable_name] = 1;
+      SetValue(variable_name, val[i]);
+    }
+  }
+  for (int i = 0; i < (int)functions[name].parameter_list.size(); i++) {
+    std::string variable_name = functions[name].parameter_list[i].name;
+    std::any variable_val = functions[name].parameter_list[i].val;
+    if (vis.find(variable_name) == vis.end()) {
+      SetValue(variable_name, variable_val);
+    }
+  }
 }
 
 std::any EvalVisitor::GetValue(std::any variable) {
@@ -219,10 +238,14 @@ std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
 }
 std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {}
 std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {}
+
+
 std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {}
 std::any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {}
 std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {}
 std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {}
+
+
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   if (ctx->if_stmt() != nullptr) {
     return visit(ctx->if_stmt());
@@ -232,9 +255,13 @@ std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ct
     return visit(ctx->funcdef());
   }
 }
+
+
 std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {}
 std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {}
 std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {}
+
+
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   return visit(ctx->or_test());
 }
@@ -467,7 +494,58 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
     return visit(ctx->factor());
   }
 }
-std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {}
+std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
+  if (ctx->trailer() != nullptr) {
+    std::string name = AnyToString(visit(ctx->atom()));
+    std::vector <std::any> trailer_vector = std::any_cast<std::vector <std::any>> visit(ctx->trailer());
+    if (name == "int") {
+      return AnyToInt(trailer_vector[0]);
+    } else if (name == "str") {
+      return AnyToString()(trailer_vector[0]);
+    } else if (name == "bool") {
+      return AnyToBool(trailer_vector[0]);
+    } else if (name == "float") {
+      return AnyToDouble(trailer_vector[0]);
+    } else if (name == "print") {
+      for (int i = 0; i < (int) trailer_vector.size(); i++) {
+        std::any tmp = trailer_vector[i];
+        if (tmp.type() == typeid(double)) {
+          printf("%.6lf",AnyToDouble(tmp));
+        } else if (tmp.type() == typeid(bool)) {
+          std::cout << AnyToBool(tmp) ? "True" : "False";
+        } else if (tmp.type() == typeid(int2048)) {
+          std::cout << AnyToInt(tmp);
+        } else if (tmp.type() == typeid(std::string)){
+          std::string str = AnyToString(tmp);
+          int str_sz = str.size();
+          for (int j = 0; j < str_sz; j++) {
+            if (str[j] == '\\') {
+              j++;
+              if (str[j] == 'n') {
+                std::cout << '\n';
+              } else {
+                std::cout << str[j];
+              }
+            } else {
+              std::cout << str[j];
+            }
+          }
+        }
+        if (i != (int) trailer_vector.size() - 1) {
+          std::cout << ' ';
+        }
+      }
+      std::cout << '\n';
+    } else {
+      InitFunction(name,trailer_vector);
+      std::any ans = visit(functions[name].suite);
+      DelVariableStack();
+      return ans;
+    }
+  } else {
+    return visit(ctx->atom());
+  }
+}
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
   if (ctx->arglist() != nullptr) {
     return visit(ctx->arglist());
@@ -477,7 +555,7 @@ std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
 }
 std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   if (ctx->NAME() != nullptr) {
-    return std::pair<std::string,int>(ctx->NAME()->getText(),1);
+    return ctx->NAME()->getText();
   } else if (ctx->NUMBER() != nullptr) {
     std::string str = AnyToString(visit(ctx->NUMBER()));
     bool flag = 0;
@@ -505,7 +583,7 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     }
     return ans;
   } else if (ctx->NONE() != nullptr) {
-    return std::pair<std::string,int>("None",1);
+    return "None";
   } else if (ctx->TRUE() != nullptr) {
     return true;
   } else if (ctx->FALSE() != nullptr) {
@@ -519,7 +597,6 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
 }
 std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {}
 std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {}
-
 
 std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   std::vector<Python3Parser::ArgumentContext *> argument_vector =  ctx->argument();
