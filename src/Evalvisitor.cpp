@@ -236,10 +236,27 @@ std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
     return visit(ctx->flow_stmt());
   }
 }
+
+
 std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {}
-std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {}
 
 
+std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
+  if (ctx->ADD_ASSIGN() != nullptr) {
+    return "+=";
+  } else if (ctx->SUB_ASSIGN() != nullptr) {
+    return "-=";
+  } else if (ctx->MULT_ASSIGN() != nullptr) {
+    return "*=";
+  } else if (ctx->DIV_ASSIGN() != nullptr) {
+    return "/=";
+  } else if (ctx->IDIV_ASSIGN() != nullptr) {
+    return "//=";
+  } else if (ctx->MOD_ASSIGN() != nullptr) {
+    return "%=";
+  }
+  return 0;
+}
 std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
   if (ctx->break_stmt() != nullptr) {
     return visit(ctx->break_stmt());
@@ -261,10 +278,9 @@ std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ct
 std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   Control ans(3);
   ans.return_val = visit(ctx->testlist());
+  //TODO: 变量 -> 值
   return ans;
 }
-
-
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   if (ctx->if_stmt() != nullptr) {
     return visit(ctx->if_stmt());
@@ -274,8 +290,6 @@ std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ct
     return visit(ctx->funcdef());
   }
 }
-
-
 std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   std::vector<Python3Parser::SuiteContext *> suite_vector = ctx->suite();
@@ -317,8 +331,6 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   }
   return 0;
 }
-
-
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   return visit(ctx->or_test());
 }
@@ -654,8 +666,58 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   }
   return 0;
 }
-std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {}
-std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {}
+std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {
+  int string_sz = (int) ctx->FORMAT_STRING_LITERAL().size();
+  int testlist_sz = (int) ctx->testlist().size();
+  int pos1 = 0, pos2 = 0;
+  std::string ans = "";
+  while (pos1 < string_sz && pos2 < testlist_sz) {
+    auto index1 = ctx->FORMAT_STRING_LITERAL(pos1)->getSymbol()->getTokenIndex();
+    auto index2 = ctx->CLOSE_BRACE(pos2)->getSymbol()->getTokenIndex();
+    if (index1 < index2) {
+      std::string str = ctx->FORMAT_STRING_LITERAL(pos1)->getText();
+      int str_sz = (int) str.size();
+      for (int i = 0; i < str_sz; i++) {
+        if (str[i] == '{' || str[i] == '}') {
+          i++;
+        }
+        ans += str[i];
+      }
+      pos1++;
+    } else {
+      std::any res = std::any_cast<std::vector <std::any>>(visit(ctx->testlist(pos2)))[0];
+      CheckVariable(res);
+      ans += AnyToString(res);
+      pos2++;
+    }
+  }
+  while (pos1 < string_sz) {
+    std::string str = ctx->FORMAT_STRING_LITERAL(pos1)->getText();
+    int str_sz = (int) str.size();
+    for (int i = 0; i < str_sz; i++) {
+      if (str[i] == '{' || str[i] == '}') {
+        i++;
+      }
+      ans += str[i];
+    }
+    pos1++;
+  }
+  while (pos2 < testlist_sz) {
+    std::any res = std::any_cast<std::vector <std::any>>(visit(ctx->testlist(pos2)))[0];
+    CheckVariable(res);
+    ans += AnyToString(res);
+    pos2++;
+  }
+  return ans;
+}
+std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
+  std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
+  std::vector <std::any> ans;
+  for (int i = 0; i < test_vector.size(); i++) {
+    ans.push_back(visit(test_vector[i]));
+  }
+  return ans;
+}
 std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   std::vector<Python3Parser::ArgumentContext *> argument_vector =  ctx->argument();
   int sz = argument_vector.size();
