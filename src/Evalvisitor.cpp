@@ -132,8 +132,8 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
   std::map <std::string, int> vis;
   AddVariableStack();
   for (int i = 0; i < (int)val.size(); i++) {
-    if (val[i].type() == typeid(std::pair<std::string, std::any>)) {
-      auto tmp = std::any_cast<std::pair<std::string, std::any>>(val[i]);
+    if (val[i].type() == typeid(std::pair<std::string, int>)) {
+      auto tmp = std::any_cast<std::pair<std::string, int>>(val[i]);
       vis[tmp.first] = 1;
       SetValue(tmp.first, tmp.second);
     } else {
@@ -236,11 +236,67 @@ std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
     return visit(ctx->flow_stmt());
   }
 }
-
-
-std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {}
-
-
+std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
+  std::vector<Python3Parser::TestlistContext *> testlist_vector = ctx->testlist();
+  int sz = testlist_vector.size();
+  if (sz == 1) {
+    return visit(testlist_vector[0]);
+  }
+  if (ctx->augassign() != nullptr) {
+    std::string op = AnyToString(visit(ctx->augassign()));
+    std::string name = std::any_cast<std::vector <std::pair<std::string,int>>>(visit(testlist_vector[0]))[0].first;
+    std::any tmp = std::any_cast<std::vector <std::any>>(visit(testlist_vector[1]))[0];
+    CheckVariable(tmp);
+    std::any ans = GetValue(name);
+    if (op == "+=") {
+      if (tmp.type() == typeid(std::string)) {
+        ans = AnyToString(ans) + AnyToString(tmp);
+      } else if (tmp.type() == typeid(double) || ans.type() == typeid(double)) {
+        ans = AnyToDouble(ans) + AnyToDouble(tmp);
+      } else {
+        ans = AnyToInt(ans) + AnyToInt(tmp);
+      }
+    } else if (op == "-=") {
+      if (tmp.type() == typeid(double) || ans.type() == typeid(double)) {
+        ans = AnyToDouble(ans) - AnyToDouble(tmp);
+      } else {
+        ans = AnyToInt(ans) - AnyToInt(tmp);
+      }
+    } else if (op == "*=") {
+      if (ans.type() == typeid(std::string)) {
+        std::string str = AnyToString(ans), res = "";
+        int2048 len = AnyToInt(tmp);
+        while (len--) {
+          res += str;
+        }
+        ans = res;
+      } else if (tmp.type() == typeid(double) || ans.type() == typeid(double)) {
+        ans = AnyToDouble(ans) * AnyToDouble(tmp);
+      } else {
+        ans = AnyToInt(ans) * AnyToInt(tmp);
+      }      
+    } else if (op == "/=") {
+      ans = AnyToDouble(ans) / AnyToDouble(tmp);
+    } else if (op == "//=") {
+      ans = AnyToInt(ans) / AnyToInt(tmp);
+    } else if (op == "%=") {
+      ans = AnyToInt(ans) % AnyToInt(tmp);
+    }
+    SetValue(name, ans);
+  } else {
+    std::vector <std::any> ans = std::any_cast<std::vector <std::any>>(visit(testlist_vector[sz - 1]));
+    for (int i = 0; i < ans.size(); i++) {
+      CheckVariable(ans[i]);
+    }
+    for (int i = sz - 2; i >= 0; i--) {
+      std::vector <std::pair<std::string,int>> tmp = std::any_cast<std::vector <std::pair<std::string,int>>>(visit(testlist_vector[i]));
+      for (int j = 0; j < ans.size(); j++) {
+        SetValue(tmp[j].first,ans[j]);
+      }
+    }
+  }
+  return 0 ;
+}
 std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
   if (ctx->ADD_ASSIGN() != nullptr) {
     return "+=";
