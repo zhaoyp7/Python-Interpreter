@@ -2,6 +2,9 @@
 two = 0 + 1 * 2
 three = two + 1
 
+#print(two)
+#print(three)
+
 print(two < three)
 print(two > three)
 print(two <= three)

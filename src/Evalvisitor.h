@@ -38,6 +38,7 @@ private:
   std::any GetValue(std::any);
   void SetValue(std::string, std::any);
   void CheckVariable(std::any&);
+  bool IsVariable(std::string);
   void AddVariableStack() {
 	variables_stack.push_back(std::map<std::string, std::any>());
   }
