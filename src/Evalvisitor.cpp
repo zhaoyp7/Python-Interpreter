@@ -257,9 +257,15 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     return visit(testlist_vector[0]);
   }
   if (ctx->augassign() != nullptr) {
+    // puts("QwQ");
     std::string op = AnyToString(visit(ctx->augassign()));
-    std::string name = std::any_cast<std::vector <std::pair<std::string,int>>>(visit(testlist_vector[0]))[0].first;
+    // puts("QwQ");
+    std::vector <std::any> tmp_name = std::any_cast<std::vector<std::any>>(visit(testlist_vector[0]));
+    std::string name = (std::any_cast <std::pair <std::string,int>>(tmp_name[0])).first;
+    // std::string name = std::any_cast<std::vector <std::pair<std::string,int>>>(visit(testlist_vector[0]))[0].first;
+    // puts("QwQ");
     std::any tmp = std::any_cast<std::vector <std::any>>(visit(testlist_vector[1]))[0];
+    // puts("QwQ");
     CheckVariable(tmp);
     std::any ans = GetValue(name);
     if (op == "+=") {
@@ -277,6 +283,7 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
         ans = AnyToInt(ans) - AnyToInt(tmp);
       }
     } else if (op == "*=") {
+      // puts("operator *=");
       if (ans.type() == typeid(std::string)) {
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
@@ -464,7 +471,14 @@ std::any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
 }
 std::any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
   if (ctx->not_test() != nullptr) {
-    return !AnyToBool(visit(ctx->not_test()));
+    std::any tmp = visit(ctx->not_test());
+    // if (tmp.type() == typeid(bool)) puts("ok");
+    // else if (tmp.type() == typeid(std::pair<std::string,int>)) puts("wrong");
+    // else puts("failed");
+    CheckVariable(tmp);
+    bool res = AnyToBool(tmp);
+    // printf("res = %d\n",res);
+    return !res;
   } else {
     return visit(ctx->comparison());
   }
