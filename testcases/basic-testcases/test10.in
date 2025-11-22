@@ -1,4 +1,5 @@
 #Function Test
 def foo():
+#    print(1)
     return
 foo()

@@ -196,11 +196,19 @@ std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   return 0;
 }
 std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
+  // puts("enter : Funcdef");
   Function function;
   std::string name = ctx->NAME()->getText();
+  // std::cout << "name is " << name << '\n';
+  // puts("QwQ");
   function.parameter_list = std::any_cast<std::vector <Parameter>>(visit(ctx->parameters()));
+  // int sz = function.parameter_list.size();
+  // printf("sz = %d\n",sz);
+  // puts("QwQ");
   function.suite = ctx->suite();
+  // puts("QwQ");
   functions[name] = function;
+  // puts("QwQ");
   return 0;
 }
 std::any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
@@ -344,6 +352,7 @@ std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
   return 0;
 }
 std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
+  // puts("enter Flow_stmt");
   if (ctx->break_stmt() != nullptr) {
     return visit(ctx->break_stmt());
   } else if (ctx->continue_stmt()) {
@@ -362,8 +371,12 @@ std::any EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ct
   return ans;
 }
 std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
+  // puts("enter Return_stmt");
+
   Control ans(3);
-  ans.return_val = visit(ctx->testlist());
+  if (ctx->testlist() != nullptr) {
+    ans.return_val = visit(ctx->testlist());
+  }
   //TODO: 变量 -> 值
   return ans;
 }
@@ -390,9 +403,16 @@ std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
   return 0;
 }
 std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
-  while (AnyToBool(ctx->test())) {
+  // puts("enter While_stmt");
+  // std::any res = AnyToBool(visit(ctx->test()));
+  // if (res.type() == typeid(bool)) puts("ok");
+  // else puts("failed");
+  // printf("%d\n",AnyToBool(res));
+  while (AnyToBool(visit(ctx->test()))) {
     std::any ans = visit(ctx->suite());
+    // puts("visit a suite");
     if (ans.type() == typeid(Control)) {
+      // puts("this is a Control");
       Control res = std::any_cast<Control>(ans);
       if (res.op == 2) {
         return 0;
@@ -401,6 +421,7 @@ std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
       }
     }
   }
+  // puts("leave While_stmt");
   return 0;
 }
 std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
@@ -420,11 +441,15 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   // puts("enter test");
   // std::any tmp = visit(ctx->or_test());
-  // if (tmp.type() == typeid(int2048))  puts("ok Test");
+  // if (tmp.type() == typeid(bool))  
+  // {
+  //   puts("ok Test");
+  //   bool val = std::any_cast<bool>(tmp);
+  //   std::cout << "test : " << val << '\n';
+  // }
   // else puts("failed Test");
-  // int2048 val = std::any_cast<int2048>(tmp);
-  // std::cout << "test : " << val << '\n';
   // return tmp;  
+
   // std::any res = visit(ctx->or_test());
   // puts("leave test");
   // return res;
@@ -507,7 +532,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
           return (bool)false;
         }
       } else if (AnyToInt(ans) >= AnyToInt(nxt)) {
-        puts("return bool False");
+        // puts("return bool False");
         return (bool)false;
       }
     } else if (op == ">") {
@@ -770,9 +795,13 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       }
       std::cout << '\n';
     } else {
+      // puts("try build a function");
       InitFunction(name,trailer_vector);
+      // puts("build a function");
       std::any ans = visit(functions[name].suite);
+      // puts("visit a function");
       DelVariableStack();
+      // puts("delete a function");
       return ans;
     }
   } else {
