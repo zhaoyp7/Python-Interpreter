@@ -311,10 +311,14 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     } else if (op == "*=") {
       // puts("operator *=");
       if (ans.type() == typeid(std::string)) {
+        // puts("operator string *");
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
+        // std::cout << "len = " << len << '\n';
+        // printf("%d\n",len.CheckZero());
         // while (len--) {
-        while (len.CheckZero() != 0){
+        while (len.CheckZero() == 0) {
+          // puts("QwQ");
           len.minus1();
           res += str;
         }
@@ -730,7 +734,7 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
         // while (len--) {
-        while (len.CheckZero() != 0){
+        while (len.CheckZero() == 0){
           len.minus1();
           res += str;
         }
@@ -739,7 +743,7 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
         std::string str = AnyToString(tmp), res = "";
         int2048 len = AnyToInt(ans);
         // while (len--) {
-        while (len.CheckZero() != 0){
+        while (len.CheckZero() == 0){
           len.minus1();
           res += str;
         }

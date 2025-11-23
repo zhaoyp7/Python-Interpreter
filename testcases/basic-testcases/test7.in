@@ -3,6 +3,7 @@ Hello = "Hello, "
 World = "World!"
 print(Hello + World)
 Hello *= 3
+#print(Hello)
 print(Hello + "is there anybody in there?")
 
 cmp = Hello <= World
