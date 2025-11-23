@@ -3,7 +3,7 @@
 
 int2048::operator double() const {
   double ans = 0;
-  for (int i = 0; i <= len; i++) {
+  for (int i = len; i >= 0; i--) {
     ans = ans * BASE + a[i];
   }
   if (sign == -1) {
