@@ -5,8 +5,9 @@
 
 #include "Python3ParserBaseVisitor.h"
 #include <any>
+#include "int2048.h"
 
-using int2048 = long long;
+// using int2048 = long long;
 
 struct Parameter{
 	std::string name;
@@ -23,19 +24,18 @@ struct Control{
 	std::any return_val;
 };
 
-bool AnyToBool (std::any) ;
-double AnyToDouble (std::any) ;
-int2048 AnyToInt (std::any) ;
-std::string AnyToString (std::any) ;
-double StringToDouble (std::string) ;
-std::string DoubleToString(double) ;
-std::string IntToString(int2048) ;
-int2048 StringToInt(std::string) ;
-
 class EvalVisitor : public Python3ParserBaseVisitor {
 private:
   std::vector <std::map<std::string, std::any>> variables_stack;
   std::any GetValue(std::any);
+  bool AnyToBool (std::any) ;
+  double AnyToDouble (std::any) ;
+  int2048 AnyToInt (std::any) ;
+  std::string AnyToString (std::any) ;
+  double StringToDouble (std::string) ;
+  std::string DoubleToString(double) ;
+  std::string IntToString(int2048) ;
+  int2048 StringToInt(std::string) ;
   void SetValue(std::string, std::any);
   void CheckVariable(std::any&);
   bool IsVariable(std::string);

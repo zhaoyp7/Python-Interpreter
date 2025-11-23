@@ -36,6 +36,7 @@ def is_prime(x) :
 	return True
 
 def gcd(x , y) :
+	#print("gcd : ",x,y)
 	if y == 0 : return x
 	return gcd(y , x % y)
 
@@ -44,15 +45,24 @@ def F(n , p , c) : return (n * n + c) % p
 seed = 19260817
 
 def rand() :
+	#print("seed = ",seed)
 	seed += seed * 131072
 	seed += seed // 32
 	seed += seed * 4096
 	seed %= 4294967296
+	#print("seed = ",seed)
 	return seed
 
-def random(n) : return rand() % n
+def random(n) : 
+	#print("enter random")
+	#tmp = rand()
+	#print("random val = ",tmp)
+	#return tmp % n
+	return rand() % n
 
 def iabs(x) :
+	#print("enter iabs")
+	#print("x = ",x)
 	if x >= 0 : return x
 	else : return -x
 
@@ -63,10 +73,19 @@ def pollard_rho(n) :
 		print(n)
 		return
 	while True :
+		#print ("QwQ1")
 		c , p = random(n - 1) + 1 , random(n - 1) + 1
+		#print("c,p = ",c,p)
+		#print(c,p)
+		#print ("QwQ2")
 		q = F(p , n , c)
+		#print("q = ",q)
+
 		while p != q :
+			#(iabs(p - q))
+			#print("iabs = ",iabs(p - q))
 			g = gcd(iabs(p - q) , n)
+			#print("g = ",g)
 			if g != 1 and g != n :
 				pollard_rho(g)
 				pollard_rho(n // g)

@@ -1,0 +1,21 @@
+seed = 19260817
+
+def rand() :
+	print("seed = ",seed)
+	seed += seed * 131072
+	seed += seed // 32
+	seed += seed * 4096
+	seed %= 4294967296
+	print("seed = ",seed)
+	return seed
+
+def random(n) : 
+	print("enter random")
+	tmp = rand()
+	print("random val = ",tmp)
+	return tmp % n
+	#return rand() % n
+
+x = random(10) + 1
+y = random(10) + 1
+print(x,y)

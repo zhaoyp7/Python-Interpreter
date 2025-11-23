@@ -1,7 +1,9 @@
 #include "Evalvisitor.h"
+#include "int2048.h"
 #include <any>
 
-bool AnyToBool (std::any tmp) {
+bool EvalVisitor::AnyToBool (std::any tmp) {
+  CheckVariable(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp);
   } else if (tmp.type() == typeid(std::string)) {
@@ -9,12 +11,13 @@ bool AnyToBool (std::any tmp) {
   } else if (tmp.type() == typeid(double)) {
     return std::any_cast<double>(tmp);
   } else if (tmp.type() == typeid(int2048)) {
-    return std::any_cast<int2048>(tmp);
-    // return !std::any_cast<int2048>(tmp).CheckZero();
+    // return std::any_cast<int2048>(tmp);
+    return !std::any_cast<int2048>(tmp).CheckZero();
   }
   return 0;
 } 
-double AnyToDouble (std::any tmp) {
+double EvalVisitor::AnyToDouble (std::any tmp) {
+  CheckVariable(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp) ? 1 : 0;
   } else if (tmp.type() == typeid(std::string)) {
@@ -23,11 +26,12 @@ double AnyToDouble (std::any tmp) {
     return std::any_cast<double>(tmp);
   } else if (tmp.type() == typeid(int2048)) {
     return std::any_cast<int2048>(tmp);
-    // TODO
+    // return std::any_cast<long long>(tmp);
   }
   return 0;
 }
-int2048 AnyToInt (std::any tmp) {
+int2048 EvalVisitor::AnyToInt (std::any tmp) {
+  CheckVariable(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp);
   } else if (tmp.type() == typeid(std::string)) {
@@ -41,7 +45,8 @@ int2048 AnyToInt (std::any tmp) {
   return 0;
   // return int2048();
 }
-std::string AnyToString (std::any tmp) {
+std::string EvalVisitor::AnyToString (std::any tmp) {
+  CheckVariable(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp) ? "True" : "False";
   } else if (tmp.type() == typeid(std::string)) {
@@ -53,7 +58,7 @@ std::string AnyToString (std::any tmp) {
   }
   return "";
 };
-double StringToDouble (std::string str) {
+double EvalVisitor::StringToDouble (std::string str) {
   int sz = str.size(), flag = 1, pos = 0;
   double ans = 0, val = 1;
   if (str[pos] == '+') {
@@ -76,7 +81,7 @@ double StringToDouble (std::string str) {
   }
   return flag * ans;
 } 
-std::string DoubleToString(double val) {
+std::string EvalVisitor::DoubleToString(double val) {
   int flag = (val >= 0 ? 1 : -1);
   val = std::abs(val);
   int tmp = int(val);
@@ -100,9 +105,14 @@ std::string DoubleToString(double val) {
   }
   return ans;
 };
-std::string IntToString(int2048 val) {
+std::string EvalVisitor::IntToString(int2048 val) {
+  return (std::string) val;
+  /*
   std::string ans = "";
   int flag = (val >= 0 ? 1 : -1);
+  if (flag == -1) {
+    val = -val;
+  }
   while (val) {
     ans += val % 10 + '0';
     val /= 10;
@@ -114,8 +124,12 @@ std::string IntToString(int2048 val) {
     ans = '-' + ans;
   } 
   return ans;
+  */
 };
-int2048 StringToInt (std::string str) {
+int2048 EvalVisitor::StringToInt (std::string str) {
+  int2048 ans(str);
+  return ans; 
+  /*
   // std::cout << str << '\n';
   int sz = str.size(), flag = 1, pos = 0;
   int2048 ans = 0;
@@ -131,12 +145,16 @@ int2048 StringToInt (std::string str) {
   }
   // printf("asdfj;lasjfd;asdf : %lld\n",ans);
   return flag * ans;
+  */
 } 
 
 void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
+  // puts("enter : InitFunction");
+  // std::cout << "Function is " << name << '\n';
   std::map <std::string, int> vis;
   AddVariableStack();
   for (int i = 0; i < (int)val.size(); i++) {
+    // CheckVariable(val[i]);
     if (val[i].type() == typeid(std::pair<std::string, int>)) {
       auto tmp = std::any_cast<std::pair<std::string, int>>(val[i]);
       vis[tmp.first] = 1;
@@ -295,7 +313,9 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
       if (ans.type() == typeid(std::string)) {
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
-        while (len--) {
+        // while (len--) {
+        while (len.CheckZero() != 0){
+          len.minus1();
           res += str;
         }
         ans = res;
@@ -375,10 +395,26 @@ std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
 
   Control ans(3);
   if (ctx->testlist() != nullptr) {
-    ans.return_val = visit(ctx->testlist());
+    std::vector <std::any> tmp = std::any_cast<std::vector<std::any>>(visit(ctx->testlist()));
+    for (int i = 0; i < (int) tmp.size(); i++) {
+      CheckVariable(tmp[i]);
+    }
+    if (tmp.size() == 1) {
+      // if (tmp[0].type() == typeid(int2048)) {
+      //   printf("return val = %lld\n",AnyToInt(tmp[0]));
+      // }
+      Control res(3);
+      res.return_val = tmp[0];
+      return res;
+    }
+    ans.return_val = tmp;
   }
   //TODO: 变量 -> 值
+  // if (ans.return_val.size() == 1) {
+  //   return ans[0];
+  // } else {
   return ans;
+  // }
 }
 std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   if (ctx->if_stmt() != nullptr) {
@@ -390,14 +426,24 @@ std::any EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ct
   }
 }
 std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
+  // puts("enter If_stmt");
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   std::vector<Python3Parser::SuiteContext *> suite_vector = ctx->suite();
   for (int i = 0; i < (int) test_vector.size(); i++) {
-    if (AnyToBool(visit(test_vector[i]))) {
+    std::any tmp = visit(test_vector[i]);
+    if (AnyToBool(tmp)) {
+      // puts("enter if_suite");
       return visit(suite_vector[i]);
     }
   }
   if (test_vector.size() != suite_vector.size()) {
+    // puts("enter else");
+    std::any res = visit(suite_vector.back());
+    // if (res.type() == typeid(Control))  puts("type Control");
+    // else if (res.type() == typeid(int2048)) puts("type int");
+    // else puts("failed");
+    return res;
+    
     return visit(suite_vector.back());
   }
   return 0;
@@ -432,6 +478,7 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
     for (int i = 0; i < stmt_vector.size(); i++) {
       std::any tmp = visit(stmt_vector[i]);
       if (tmp.type() == typeid(Control)) {
+        // puts("this is a Control");
         return tmp;
       }
     }
@@ -560,6 +607,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == ">=") {
+      // printf("operator >= ,ans.val = %lld,nxt.val = %lld,res = %d\n",AnyToInt(ans),AnyToInt(nxt),AnyToInt(ans) < AnyToInt(nxt));
       if (ans.type() == typeid(std::string)) {
         if (AnyToString(ans) < AnyToString(nxt)) {
           return (bool)false;
@@ -602,6 +650,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
   // if (tmp.type() == typeid(std::string))  puts("ok Comparison");
   // else puts("failed Comparison");
   // return tmp;
+  // puts("leave Comparison with return val = true");
   return (bool)true;
 }
 std::any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
@@ -673,19 +722,25 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
   int sz = factor_vector.size();
   for (int i = 1; i < sz; i++) {
     std::any tmp = visit(factor_vector[i]);
+    CheckVariable(ans);
+    CheckVariable(tmp);
     std::string op = AnyToString(visit(muldivmod_op_vector[i - 1]));
     if (op == "*") {
       if (ans.type() == typeid(std::string)) {
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
-        while (len--) {
+        // while (len--) {
+        while (len.CheckZero() != 0){
+          len.minus1();
           res += str;
         }
         ans = res;
       } else if (tmp.type() == typeid(std::string)) {
         std::string str = AnyToString(tmp), res = "";
         int2048 len = AnyToInt(ans);
-        while (len--) {
+        // while (len--) {
+        while (len.CheckZero() != 0){
+          len.minus1();
           res += str;
         }
         ans = res;
@@ -699,7 +754,10 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
     } else if (op == "//") {
       ans = AnyToInt(ans) / AnyToInt(tmp); 
     } else if (op == "%") {
+      // puts("operator % ");
+      // printf("val1 = %lld , val2 = %lld\n",AnyToInt(ans),AnyToInt(tmp));
       ans = AnyToInt(ans) % AnyToInt(tmp);
+      // puts("ok?");
     }
   }
   // int2048 val = std::any_cast<int2048>(ans);
@@ -728,9 +786,16 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
     // return tmp;
     return visit(ctx->atom_expr());
   } else if (ctx->ADD() != nullptr) {
-    return visit(ctx->factor());
+    std::any ans = visit(ctx->factor());
+    CheckVariable(ans);
+    return ans;
+    // return visit(ctx->factor());
   } else if (ctx->MINUS() != nullptr) {
     std::any ans = visit(ctx->factor());
+    CheckVariable(ans);
+    // puts("this is a - factor");
+    // if (ans.type() == typeid(int2048))  puts("ok"),printf("val = %lld\n",AnyToInt(ans));
+    // else puts("failed");
     if (ans.type() == typeid(double)) {
       ans = -AnyToDouble(ans);
     } else {
@@ -802,6 +867,12 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       // puts("visit a function");
       DelVariableStack();
       // puts("delete a function");
+      if (ans.type() == typeid(Control)) {
+        // puts("Switch Control to val");
+        ans = std::any_cast<Control>(ans).return_val;
+        // if (ans.type() == typeid(int2048))  puts("ok"),printf("val = %lld\n",AnyToInt(ans));
+        // else puts("failed");
+      }
       return ans;
     }
   } else {
@@ -958,6 +1029,7 @@ std::any EvalVisitor::visitArgument(Python3Parser::ArgumentContext *ctx) {
     // else puts("failed Argument");
     return ans;
   } else {
+    // puts("enter Argument like (A = B)");
     std::any ans = visit(test_vector[1]);
     CheckVariable(ans);
     return std::pair(visit(test_vector[0]), ans);
