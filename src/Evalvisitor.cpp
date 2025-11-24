@@ -683,7 +683,10 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
           return (bool)false;
         }
       } if (ans.type() == typeid(std::string)||nxt.type() == typeid(std::string)) {
-        if (ans.type() == typeid(std::string)&&nxt.type() == typeid(std::string)&&AnyToString(ans) == AnyToString(nxt)) {
+        if(ans.type() != typeid(std::string)||nxt.type() != typeid(std::string)) {
+          return (bool)false;
+        }
+        if (AnyToString(ans) == AnyToString(nxt)) {
           return (bool)false;
         }
       } else if (ans.type() == typeid(double)||nxt.type() == typeid(double)) {
