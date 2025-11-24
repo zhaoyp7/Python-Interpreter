@@ -55,7 +55,10 @@ std::string EvalVisitor::AnyToString (std::any tmp) {
     return DoubleToString(std::any_cast<double>(tmp));
   } else if (tmp.type() == typeid(int2048)) {
     return IntToString(std::any_cast<int2048>(tmp));
-  }
+  } 
+  // else if (tmp.type() == typeid(std::pair<std::string,int>)) {
+  //   return tmp;
+  // }
   return "";
 };
 double EvalVisitor::StringToDouble (std::string str) {
@@ -188,7 +191,7 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
 bool EvalVisitor::IsVariable(std::string name) {
   if (variables_stack.back().find(name) != variables_stack.back().end()) {
     return 1;
-  } else if (variables_stack.front().find(name) != variables_stack.back().end()) {
+  } else if (variables_stack.front().find(name) != variables_stack.front().end()) {
     return 1;
   }
   return 0;
@@ -334,7 +337,7 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
         // std::cout << "len = " << len << '\n';
         // printf("%d\n",len.CheckZero());
         // while (len--) {
-        while (len.CheckZero() == 0) {
+        while (len.CheckZero() == 0 && len.getsign() == 1) {
           // puts("QwQ");
           len.minus1();
           res += str;
@@ -767,7 +770,7 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
         // while (len--) {
-        while (len.CheckZero() == 0){
+        while (len.CheckZero() == 0 && len.getsign() == 1){
           len.minus1();
           res += str;
         }
@@ -776,7 +779,7 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
         std::string str = AnyToString(tmp), res = "";
         int2048 len = AnyToInt(ans);
         // while (len--) {
-        while (len.CheckZero() == 0){
+        while (len.CheckZero() == 0 && len.getsign() == 1){
           len.minus1();
           res += str;
         }

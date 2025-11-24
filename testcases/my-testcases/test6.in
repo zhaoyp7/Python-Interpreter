@@ -1,0 +1,13 @@
+str = "abcd"
+print(str)
+str *= 1
+print(str)
+str *= 2
+print(str)
+str *= -1
+print(str)
+
+print(str == "")
+print("" == str)
+print(str == None)
+print(None == str)

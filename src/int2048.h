@@ -63,6 +63,8 @@ public:
   friend inline int2048 Shift(const int2048 &, const int);
   friend inline int2048 NewtonInv(const int2048 &) ;
   friend inline int2048 CalcInvb(const int2048 &);
+
+  int getsign() {return sign;}
   int2048 &add1();
   int2048 &minus1();
 
