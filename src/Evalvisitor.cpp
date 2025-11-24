@@ -860,7 +860,10 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       // printf("try print\n");
       for (int i = 0; i < (int) trailer_vector.size(); i++) {
         std::any tmp = trailer_vector[i];
-        if (tmp.type() == typeid(double)) {
+        CheckVariable(tmp);
+        if (tmp.type() == typeid(std::pair<std::string,int>)) {
+          printf("None");
+        } else if (tmp.type() == typeid(double)) {
           // puts("type : double");
           printf("%.6lf",AnyToDouble(tmp));
         } else if (tmp.type() == typeid(bool)) {
