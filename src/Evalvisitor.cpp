@@ -279,6 +279,8 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   // puts("enter : Expr_stmt");
   std::vector<Python3Parser::TestlistContext *> testlist_vector = ctx->testlist();
   int sz = testlist_vector.size();
+  // printf("sz = %d\n",sz);
+  // printf("=sz = %d\n",(int)ctx->ASSIGN().size());
   if (sz == 1) {
     return visit(testlist_vector[0]);
   }
@@ -625,9 +627,14 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
       }
     } else if (op == "==") {
       if (ans.type() == typeid(std::string)) {
+        if (nxt.type() != typeid(std::string)) {
+          return (bool)false;
+        }
         if (AnyToString(ans) != AnyToString(nxt)) {
           return (bool)false;
         }
+      } else if (nxt.type() == typeid(std::string)) {
+        return (bool)false;
       } else if (ans.type() == typeid(double)||nxt.type() == typeid(double)) {
         if (AnyToDouble(ans) != AnyToDouble(nxt)) {
           return (bool)false;
@@ -636,8 +643,8 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == "!=") {
-      if (ans.type() == typeid(std::string)) {
-        if (AnyToString(ans) == AnyToString(nxt)) {
+      if (ans.type() == typeid(std::string)||nxt.type() == typeid(std::string)) {
+        if (ans.type() == typeid(std::string)&&nxt.type() == typeid(std::string)&&AnyToString(ans) == AnyToString(nxt)) {
           return (bool)false;
         }
       } else if (ans.type() == typeid(double)||nxt.type() == typeid(double)) {
@@ -996,9 +1003,12 @@ std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ct
 }
 std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   // puts("enter : Testlist");
+  // std::cout << ctx->getText() << '\n';
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   std::vector <std::any> ans;
+  // printf("sz = %d\n",(int)test_vector.size());
   for (int i = 0; i < test_vector.size(); i++) {
+    // std::cout << ctx->test(i)->getText() << '\n';
     ans.push_back(visit(test_vector[i]));
   }
   // puts("leave Testlist");
@@ -1009,6 +1019,7 @@ std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   std::vector<Python3Parser::ArgumentContext *> argument_vector =  ctx->argument();
   int sz = argument_vector.size();
   std::vector <std::any> ans;
+  // printf("sz = %d\n",sz);
   for (int i = 0; i < sz; i++) {
     std::any tmp = visit(argument_vector[i]);
     // if (tmp.type() == typeid(int2048))  puts("ok Arglist");
