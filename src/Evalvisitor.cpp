@@ -889,6 +889,8 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
               j++;
               if (str[j] == 'n') {
                 std::cout << '\n';
+              } else if (str[j] == 't') {
+                std::cout << '\t';
               } else {
                 std::cout << str[j];
               }

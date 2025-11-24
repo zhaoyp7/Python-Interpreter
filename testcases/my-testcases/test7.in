@@ -1,0 +1,6 @@
+str = "\\n"
+print(str)
+str = "\\t"
+print(str)
+str = "abc\nabc\tabc"
+print(str)
