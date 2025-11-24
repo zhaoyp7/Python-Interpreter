@@ -14,7 +14,7 @@ bool EvalVisitor::AnyToBool (std::any tmp) {
     // return std::any_cast<int2048>(tmp);
     return !std::any_cast<int2048>(tmp).CheckZero();
   }
-  return 0;
+  return (bool)false;
 } 
 double EvalVisitor::AnyToDouble (std::any tmp) {
   CheckVariable(tmp);
@@ -536,6 +536,7 @@ std::any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
   std::any res;
   for (int i = 0; i < sz; i++) {
     res = visit(and_vector[i]);
+    CheckVariable(res);
     if (AnyToBool(res)) {
       return (bool)true;
     }
@@ -555,6 +556,7 @@ std::any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
   std::any res = (bool) true;
   for (int i = 0; i < sz; i++) {
     res = visit(not_vector[i]);
+    CheckVariable(res);
     if (!AnyToBool(res)) {
       return (bool)false;
     }
@@ -651,15 +653,13 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         if (!ans_none || !nxt_none) {
           return (bool)false;
         }
-      } else if (ans.type() == typeid(std::string)) {
-        if (nxt.type() != typeid(std::string)) {
+      } else if (ans.type() == typeid(std::string) || nxt.type() == typeid(std::string)) {
+        if (nxt.type() != typeid(std::string) || ans.type() != typeid(std::string)) {
           return (bool)false;
         }
         if (AnyToString(ans) != AnyToString(nxt)) {
           return (bool)false;
         }
-      } else if (nxt.type() == typeid(std::string)) {
-        return (bool)false;
       } else if (ans.type() == typeid(double)||nxt.type() == typeid(double)) {
         if (AnyToDouble(ans) != AnyToDouble(nxt)) {
           return (bool)false;
