@@ -84,7 +84,11 @@ double EvalVisitor::StringToDouble (std::string str) {
 std::string EvalVisitor::DoubleToString(double val) {
   int flag = (val >= 0 ? 1 : -1);
   val = std::abs(val);
-  int tmp = int(val);
+  // long long temp = val * 1000000 + 0.5;
+  // printf("temp = %lld\n",temp);
+  // val = temp * 0.000001;
+  // printf("val = %.9lf\n",val);
+  long long tmp = (long long)val;
   std::string ans = "";
   val = val - tmp;
   while (tmp) {
@@ -95,11 +99,19 @@ std::string EvalVisitor::DoubleToString(double val) {
     std::swap(ans[i], ans[j]);
   }
   ans += '.';
+  tmp = val * 1000000 + 0.5;
   for (int i = 1; i <= 6; i++) {
-    val *= 10;
-    ans += int(val) + '0';
-    val = val - int(val);
+    ans += tmp % 10 + '0';
+    tmp /= 10;
   }
+  for (int j = ans.size() - 1, i = j - 5; i < j; i++, j--){
+    std::swap(ans[i], ans[j]);
+  }
+  // for (int i = 1; i <= 6; i++) {
+  //   val *= 10;
+  //   ans += int(val) + '0';
+  //   val = val - int(val);
+  // }
   if (flag == -1) {
     ans = '-' + ans;
   }
