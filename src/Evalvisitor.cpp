@@ -226,7 +226,7 @@ std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   for (auto stmt : ctx->stmt()) {
     visit(stmt);
   }
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   // puts("enter : Funcdef");
@@ -242,7 +242,7 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   // puts("QwQ");
   functions[name] = function;
   // puts("QwQ");
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
   std::vector <Parameter> res;
@@ -374,7 +374,7 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
       }
     }
   }
-  return 0 ;
+  return std::pair<std::string,int>("None",0) ;
 }
 std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
   if (ctx->ADD_ASSIGN() != nullptr) {
@@ -401,7 +401,7 @@ std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
   } else if (ctx->return_stmt()) {
     return visit(ctx->return_stmt());
   }
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {
   Control ans(2);
@@ -415,6 +415,7 @@ std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
   // puts("enter Return_stmt");
 
   Control ans(3);
+  ans.return_val = std::pair<std::string,int>("None",0);
   if (ctx->testlist() != nullptr) {
     std::vector <std::any> tmp = std::any_cast<std::vector<std::any>>(visit(ctx->testlist()));
     for (int i = 0; i < (int) tmp.size(); i++) {
@@ -459,15 +460,15 @@ std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
   }
   if (test_vector.size() != suite_vector.size()) {
     // puts("enter else");
-    std::any res = visit(suite_vector.back());
+    // std::any res = visit(suite_vector.back());
     // if (res.type() == typeid(Control))  puts("type Control");
     // else if (res.type() == typeid(int2048)) puts("type int");
     // else puts("failed");
-    return res;
+    // return res;
     
     return visit(suite_vector.back());
   }
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
   // puts("enter While_stmt");
@@ -482,14 +483,14 @@ std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
       // puts("this is a Control");
       Control res = std::any_cast<Control>(ans);
       if (res.op == 2) {
-        return 0;
+        return std::pair<std::string,int>("None",0);
       } else if (res.op == 3) {
         return res;
       }
     }
   }
   // puts("leave While_stmt");
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   if (ctx->simple_stmt() != nullptr) {
@@ -504,7 +505,7 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
       }
     }
   }
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
   // puts("enter test");
@@ -909,7 +910,10 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
       if (ans.type() == typeid(Control)) {
         // puts("Switch Control to val");
         ans = std::any_cast<Control>(ans).return_val;
-        // if (ans.type() == typeid(int2048))  puts("ok"),printf("val = %lld\n",AnyToInt(ans));
+        // if (ans.type() == typeid(int2048))  puts("type int");
+        // else if (ans.type() == typeid(std::pair<std::string,int>))  puts("ok");
+        // else if (ans.type() == typeid(bool))  puts("type bool");
+        // else if (ans.type() == typeid(std::string)) puts("type string");
         // else puts("failed");
       }
       return ans;
@@ -922,7 +926,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
     // return tmp;
     return visit(ctx->atom());
   }
-  return 0 ;
+  return std::pair<std::string,int>("None",0) ;
 }
 std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
   // puts("enter Trailer");
@@ -984,7 +988,7 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   } else if (ctx->format_string() != nullptr) {
     return visit(ctx->format_string());
   }
-  return 0;
+  return std::pair<std::string,int>("None",0);
 }
 std::any EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {
   int string_sz = (int) ctx->FORMAT_STRING_LITERAL().size();

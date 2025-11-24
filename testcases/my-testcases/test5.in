@@ -1,0 +1,20 @@
+def foo() :
+    return 
+
+a = foo()
+b = a
+
+print(a == None)
+print(a != None)
+print(None == a)
+print(None != a)
+
+print(b == None)
+print(b != None)
+print(None == b)
+print(None != b)
+
+print(foo() == None)
+print(foo() != None)
+print(None == foo())
+print(None != foo())
