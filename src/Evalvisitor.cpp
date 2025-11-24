@@ -81,7 +81,10 @@ double EvalVisitor::StringToDouble (std::string str) {
     }
     pos++;
   }
-  return flag * ans;
+  if (ans) {
+    ans *= flag;
+  }
+  return ans;
 } 
 std::string EvalVisitor::DoubleToString(double val) {
   int flag = (val >= 0 ? 1 : -1);
@@ -844,7 +847,9 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
     // if (ans.type() == typeid(int2048))  puts("ok"),printf("val = %lld\n",AnyToInt(ans));
     // else puts("failed");
     if (ans.type() == typeid(double)) {
-      ans = -AnyToDouble(ans);
+      if (AnyToDouble(ans)) {
+        ans = -AnyToDouble(ans);
+      }
     } else {
       ans = -AnyToInt(ans);
     }
