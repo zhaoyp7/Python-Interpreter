@@ -214,6 +214,9 @@ void EvalVisitor::SetValue(std::string name, std::any val) {
 void EvalVisitor::CheckVariable(std::any &tmp) {
   if (tmp.type() == typeid(std::pair<std::string, int>)) {
     std::pair<std::string, int> temp = std::any_cast<std::pair<std::string, int>>(tmp);
+    if (temp.second == 0) {
+      return ;
+    }
     tmp = GetValue(temp.first);
   }
 }
@@ -585,6 +588,8 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
     std::any nxt = visit(arith_expr_vector[i]);
     CheckVariable(ans);
     CheckVariable(nxt);
+    bool ans_none = (ans.type() == typeid(std::pair<std::string,int>));
+    bool nxt_none = (nxt.type() == typeid(std::pair<std::string,int>));
     std::string op = AnyToString(visit(comp_op_vector[i - 1]));
     if (op == "<") {
       // puts("operator < ");
@@ -638,7 +643,11 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == "==") {
-      if (ans.type() == typeid(std::string)) {
+      if (ans_none || nxt_none) {
+        if (!ans_none || !nxt_none) {
+          return (bool)false;
+        }
+      } else if (ans.type() == typeid(std::string)) {
         if (nxt.type() != typeid(std::string)) {
           return (bool)false;
         }
@@ -655,7 +664,11 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == "!=") {
-      if (ans.type() == typeid(std::string)||nxt.type() == typeid(std::string)) {
+      if (ans_none || nxt_none) {
+        if (ans_none && nxt_none) {
+          return (bool)false;
+        }
+      } if (ans.type() == typeid(std::string)||nxt.type() == typeid(std::string)) {
         if (ans.type() == typeid(std::string)&&nxt.type() == typeid(std::string)&&AnyToString(ans) == AnyToString(nxt)) {
           return (bool)false;
         }
@@ -957,7 +970,8 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
     return ans;
   } else if (ctx->NONE() != nullptr) {
     // puts("find None");
-    return (std::string)"None";
+    // return (std::string)"None";
+    return std::pair<std::string,int>("None",0);
   } else if (ctx->TRUE() != nullptr) {
     return (bool)true;
   } else if (ctx->FALSE() != nullptr) {
