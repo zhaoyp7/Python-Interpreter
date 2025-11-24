@@ -343,6 +343,14 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
           res += str;
         }
         ans = res;
+      } else if (tmp.type() == typeid(std::string)) {
+        std::string str = AnyToString(tmp), res = "";
+        int2048 len = AnyToInt(ans);
+        while (len.CheckZero() == 0 && len.getsign() == 1) {
+          len.minus1();
+          res += str;
+        }
+        ans = res;
       } else if (tmp.type() == typeid(double) || ans.type() == typeid(double)) {
         ans = AnyToDouble(ans) * AnyToDouble(tmp);
       } else {
