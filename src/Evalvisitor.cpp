@@ -55,10 +55,9 @@ std::string EvalVisitor::AnyToString (std::any tmp) {
     return DoubleToString(std::any_cast<double>(tmp));
   } else if (tmp.type() == typeid(int2048)) {
     return IntToString(std::any_cast<int2048>(tmp));
-  } 
-  // else if (tmp.type() == typeid(std::pair<std::string,int>)) {
-  //   return tmp;
-  // }
+  } else if (tmp.type() == typeid(std::pair<std::string,int>)) {
+    return "None";
+  }
   return "";
 };
 double EvalVisitor::StringToDouble (std::string str) {
