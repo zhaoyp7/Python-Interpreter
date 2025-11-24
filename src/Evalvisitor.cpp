@@ -100,6 +100,9 @@ std::string EvalVisitor::DoubleToString(double val) {
     ans += tmp % 10 + '0';
     tmp /= 10;
   }
+  if (ans == "") {
+    ans = "0";
+  }
   for (int i = 0, j = ans.size() - 1; i < j; i++, j--){
     std::swap(ans[i], ans[j]);
   }

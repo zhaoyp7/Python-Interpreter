@@ -1,0 +1,2 @@
+print(str(0))
+print(str(0.0))
