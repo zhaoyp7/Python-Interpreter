@@ -171,14 +171,23 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
   std::map <std::string, int> vis;
   AddVariableStack();
   for (int i = 0; i < (int)val.size(); i++) {
-    // CheckVariable(val[i]);
-    if (val[i].type() == typeid(std::pair<std::string, int>)) {
-      auto tmp = std::any_cast<std::pair<std::string, int>>(val[i]);
-      vis[tmp.first] = 1;
-      SetValue(tmp.first, tmp.second);
+    // puts("QwQ");
+    if (val[i].type() == typeid(std::pair<std::any, std::any>)) {
+      std::pair<std::any, std::any> tmp = std::any_cast<std::pair<std::any, std::any>>(val[i]);
+      // puts("QwQ");
+      // if (tmp.first.type() == typeid(std::pair<std::string,int>)) puts("ok");
+      // else puts("failed");
+      auto temp = std::any_cast<std::pair<std::string, int>>(tmp.first);
+      // puts("QwQ");
+      std::string name = AnyToString(temp.first);
+      // puts("QwQ");
+      vis[name] = 1;
+      // std::cout << "have " << name << '\n';
+      SetValue(name, tmp.second);
     } else {
       std::string variable_name = functions[name].parameter_list[i].name;
       vis[variable_name] = 1;
+      CheckVariable(val[i]);
       SetValue(variable_name, val[i]);
     }
   }
