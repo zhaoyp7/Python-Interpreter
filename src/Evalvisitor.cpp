@@ -1070,7 +1070,14 @@ std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
     std::any tmp = visit(argument_vector[i]);
     // if (tmp.type() == typeid(int2048))  puts("ok Arglist");
     // else puts("failed Arglist");
-    ans.push_back(tmp);
+    if (tmp.type() == typeid(std::vector <std::any>)) {
+      std::vector <std::any> temp = std::any_cast<std::vector <std::any>>(tmp);
+      for (auto x : temp) {
+        ans.push_back(x);
+      }
+    } else {
+      ans.push_back(tmp);
+    }
   }
   return ans;
 }
