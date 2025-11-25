@@ -61,10 +61,10 @@ public:
   friend int2048 MulForce(const int2048 &, const int2048 &);
   friend int2048 Div(const int2048 &, const int2048 &);
   friend inline int2048 Shift(const int2048 &, const int);
-  friend inline int2048 NewtonInv(const int2048 &) ;
+  friend inline int2048 NewtonInv(const int2048 &);
   friend inline int2048 CalcInvb(const int2048 &);
 
-  int getsign() {return sign;}
+  int getsign() { return sign; }
   int2048 &add1();
   int2048 &minus1();
 

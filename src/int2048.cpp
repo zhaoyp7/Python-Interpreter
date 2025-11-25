@@ -684,4 +684,3 @@ bool operator<=(const int2048 &a, const int2048 &b) {
 bool operator>=(const int2048 &a, const int2048 &b) {
   return (a > b || a == b);
 }
-
