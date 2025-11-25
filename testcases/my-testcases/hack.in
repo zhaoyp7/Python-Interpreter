@@ -1,0 +1,11 @@
+print(float("123"))
+print(float("-123"))
+
+print(float("+123.0"))
+print(float("-123.0"))
+
+print(-0.0)
+
+print(float("-0"))
+print(float("0"))
+print(float("+0"))
