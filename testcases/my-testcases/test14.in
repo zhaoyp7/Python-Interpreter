@@ -1,0 +1,7 @@
+def foo() :
+    return 1, 2
+
+x = 10
+y = 20
+x, y = foo()
+print(x,y)

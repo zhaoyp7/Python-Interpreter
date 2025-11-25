@@ -402,7 +402,18 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     SetValue(name, ans);
   } else {
     // puts("QwQ");
-    std::vector <std::any> ans = std::any_cast<std::vector <std::any>>(visit(testlist_vector[sz - 1]));
+    std::vector <std::any> res = std::any_cast<std::vector <std::any>>(visit(testlist_vector[sz - 1]));
+    std::vector <std::any> ans;
+    for (int i = 0; i < res.size();i++) {
+      if (res[i].type() == typeid(std::vector<std::any>)) {
+        std::vector <std::any> tmp = std::any_cast<std::vector<std::any>>(res[i]);
+        for (auto x : tmp) {
+          ans.push_back(x);
+        }
+      } else {
+        ans.push_back(res[i]);
+      }
+    }
     // printf("ans.size() = %d\n",(int)ans.size());
     for (int i = 0; i < ans.size(); i++) {
       CheckVariable(ans[i]);
