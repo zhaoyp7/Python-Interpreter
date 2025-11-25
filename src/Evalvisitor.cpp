@@ -172,10 +172,15 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
   // puts("enter : InitFunction");
   // std::cout << "Function is " << name << '\n';
   std::map <std::string, int> vis;
+  for (int i = 0; i < (int)val.size(); i++) {
+    if (val[i].type() != typeid(std::pair<std::pair<std::string, int>, std::any>)) {
+      CheckVariable(val[i]);
+    }
+  }
   AddVariableStack();
   for (int i = 0; i < (int)val.size(); i++) {
     // puts("QwQ");
-    if (val[i].type() == typeid(std::pair<std::any, std::any>)) {
+    if (val[i].type() == typeid(std::pair<std::pair<std::string, int>, std::any>)) {
       std::pair<std::any, std::any> tmp = std::any_cast<std::pair<std::any, std::any>>(val[i]);
       // puts("QwQ");
       // if (tmp.first.type() == typeid(std::pair<std::string,int>)) puts("ok");
@@ -186,19 +191,19 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
       // puts("QwQ");
       vis[name] = 1;
       // std::cout << "have " << name << '\n';
-      SetValue(name, tmp.second);
+      AddValue(name, tmp.second);
     } else {
       std::string variable_name = functions[name].parameter_list[i].name;
       vis[variable_name] = 1;
       CheckVariable(val[i]);
-      SetValue(variable_name, val[i]);
+      AddValue(variable_name, val[i]);
     }
   }
   for (int i = 0; i < (int)functions[name].parameter_list.size(); i++) {
     std::string variable_name = functions[name].parameter_list[i].name;
     std::any variable_val = functions[name].parameter_list[i].val;
     if (vis.find(variable_name) == vis.end()) {
-      SetValue(variable_name, variable_val);
+      AddValue(variable_name, variable_val);
     }
   }
 }
@@ -224,6 +229,14 @@ void EvalVisitor::SetValue(std::string name, std::any val) {
     variables_stack.back()[name] = val;
   } else if (variables_stack.front().find(name) != variables_stack.front().end()) {
     variables_stack.front()[name] = val;
+  } else {
+    variables_stack.back()[name] = val;
+  }
+}
+void EvalVisitor::AddValue(std::string name, std::any val) {
+  // std::cout << "AddValue : name = " << name << '\n';
+  if (variables_stack.back().find(name) != variables_stack.back().end()) {
+    variables_stack.back()[name] = val;
   } else {
     variables_stack.back()[name] = val;
   }

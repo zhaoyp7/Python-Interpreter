@@ -37,6 +37,7 @@ private:
   std::string IntToString(int2048) ;
   int2048 StringToInt(std::string) ;
   void SetValue(std::string, std::any);
+  void AddValue(std::string, std::any);
   void CheckVariable(std::any&);
   bool IsVariable(std::string);
   void AddVariableStack() {
