@@ -173,24 +173,32 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
   // std::cout << "Function is " << name << '\n';
   std::map <std::string, int> vis;
   for (int i = 0; i < (int)val.size(); i++) {
-    if (val[i].type() != typeid(std::pair<std::pair<std::string, int>, std::any>)) {
-      CheckVariable(val[i]);
+    if(val[i].type() == typeid(std::pair<std::any, std::any>)) {
+      // puts("??");
+      std::pair<std::any, std::any> tmp = std::any_cast<std::pair<std::any, std::any>>(val[i]);
+      // if(tmp.second.type() == typeid(int2048))  printf("ok "),std::cout << std::any_cast<int2048>(tmp.second) << '\n';
+      // else puts("failed");
+      // if(tmp.first.type() == typeid(std::pair<std::string, int>)) puts("ok");
+      // else puts("failed");
+      if (tmp.first.type() != typeid(std::pair<std::string, int>)) {
+        // puts("KAJSDF;LAJSFDL;JAF");
+        CheckVariable(val[i]);
+      }
     }
+    // if (val[i].type() != typeid(std::pair<std::pair<std::string, int>, std::any>)) {
+    //   puts("QQQ");
+    //   CheckVariable(val[i]);
+    // }
   }
   AddVariableStack();
   for (int i = 0; i < (int)val.size(); i++) {
-    // puts("QwQ");
-    if (val[i].type() == typeid(std::pair<std::pair<std::string, int>, std::any>)) {
+    if (val[i].type() == typeid(std::pair<std::any, std::any>)) {
       std::pair<std::any, std::any> tmp = std::any_cast<std::pair<std::any, std::any>>(val[i]);
-      // puts("QwQ");
       // if (tmp.first.type() == typeid(std::pair<std::string,int>)) puts("ok");
       // else puts("failed");
       auto temp = std::any_cast<std::pair<std::string, int>>(tmp.first);
-      // puts("QwQ");
       std::string name = AnyToString(temp.first);
-      // puts("QwQ");
       vis[name] = 1;
-      // std::cout << "have " << name << '\n';
       AddValue(name, tmp.second);
     } else {
       std::string variable_name = functions[name].parameter_list[i].name;
@@ -243,6 +251,7 @@ void EvalVisitor::AddValue(std::string name, std::any val) {
 }
 void EvalVisitor::CheckVariable(std::any &tmp) {
   if (tmp.type() == typeid(std::pair<std::string, int>)) {
+    // puts("this this");
     std::pair<std::string, int> temp = std::any_cast<std::pair<std::string, int>>(tmp);
     if (temp.second == 0) {
       return ;
