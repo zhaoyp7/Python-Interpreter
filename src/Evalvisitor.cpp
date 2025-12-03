@@ -775,7 +775,6 @@ std::any EvalVisitor::visitAddorsub_op(Parser::Addorsub_opContext *ctx) {
 }
 
 std::any EvalVisitor::visitTerm(Parser::TermContext *ctx) {
-  // puts("enter : term");
   std::vector<Python3Parser::FactorContext *> factor_vector = ctx->factor();
   std::vector<Python3Parser::Muldivmod_opContext *> muldivmod_op_vector =
       ctx->muldivmod_op();
@@ -790,7 +789,6 @@ std::any EvalVisitor::visitTerm(Parser::TermContext *ctx) {
       if (ans.type() == typeid(std::string)) {
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
-        // while (len--) {
         while (len.CheckZero() == 0 && len.getsign() == 1) {
           len.minus1();
           res += str;
@@ -799,7 +797,6 @@ std::any EvalVisitor::visitTerm(Parser::TermContext *ctx) {
       } else if (tmp.type() == typeid(std::string)) {
         std::string str = AnyToString(tmp), res = "";
         int2048 len = AnyToInt(ans);
-        // while (len--) {
         while (len.CheckZero() == 0 && len.getsign() == 1) {
           len.minus1();
           res += str;
@@ -815,15 +812,9 @@ std::any EvalVisitor::visitTerm(Parser::TermContext *ctx) {
     } else if (op == "//") {
       ans = AnyToInt(ans) / AnyToInt(tmp);
     } else if (op == "%") {
-      // puts("operator % ");
-      // printf("val1 = %lld , val2 = %lld\n",AnyToInt(ans),AnyToInt(tmp));
       ans = AnyToInt(ans) % AnyToInt(tmp);
-      // puts("ok?");
     }
   }
-  // int2048 val = std::any_cast<int2048>(ans);
-  // std::cout << "term : " << val << '\n';
-  // puts("leave term");
   return ans;
 }
 
@@ -841,24 +832,15 @@ std::any EvalVisitor::visitMuldivmod_op(Parser::Muldivmod_opContext *ctx) {
 }
 
 std::any EvalVisitor::visitFactor(Parser::FactorContext *ctx) {
-  // puts("enter factor");
   if (ctx->atom_expr() != nullptr) {
-    // std::any tmp = visit(ctx->atom_expr());
-    // if (tmp.type() == typeid(std::string))  puts("ok factor");
-    // else puts("failed");
-    // return tmp;
     return visit(ctx->atom_expr());
   } else if (ctx->ADD() != nullptr) {
     std::any ans = visit(ctx->factor());
     CheckVariable(ans);
     return ans;
-    // return visit(ctx->factor());
   } else if (ctx->MINUS() != nullptr) {
     std::any ans = visit(ctx->factor());
     CheckVariable(ans);
-    // puts("this is a - factor");
-    // if (ans.type() == typeid(int2048))  puts("ok"),printf("val =
-    // %lld\n",AnyToInt(ans)); else puts("failed");
     if (ans.type() == typeid(double)) {
       if (AnyToDouble(ans)) {
         ans = -AnyToDouble(ans);
@@ -867,14 +849,13 @@ std::any EvalVisitor::visitFactor(Parser::FactorContext *ctx) {
       ans = -AnyToInt(ans);
     }
     return ans;
-  } else {
+  } else { // This branch may not entered
     return visit(ctx->factor());
   }
 }
 
 std::any EvalVisitor::visitAtom_expr(Parser::Atom_exprContext *ctx) {
-  // puts("enter : Atom_expr");
-  if (ctx->trailer() != nullptr) {
+  if (ctx->trailer() != nullptr) { // Function case
     std::pair<std::string, int> tmp =
         std::any_cast<std::pair<std::string, int>>(visit(ctx->atom()));
     std::string name = tmp.first;
@@ -889,27 +870,22 @@ std::any EvalVisitor::visitAtom_expr(Parser::Atom_exprContext *ctx) {
     } else if (name == "float") {
       return AnyToDouble(trailer_vector[0]);
     } else if (name == "print") {
-      // printf("try print\n");
       for (int i = 0; i < (int)trailer_vector.size(); i++) {
         std::any tmp = trailer_vector[i];
         CheckVariable(tmp);
         if (tmp.type() == typeid(std::pair<std::string, int>)) {
           printf("None");
         } else if (tmp.type() == typeid(double)) {
-          // puts("type : double");
           printf("%.6lf", AnyToDouble(tmp));
         } else if (tmp.type() == typeid(bool)) {
-          // puts("type : bool");
           if (AnyToBool(tmp)) {
             std::cout << "True";
           } else {
             std::cout << "False";
           }
         } else if (tmp.type() == typeid(int2048)) {
-          // puts("type : int2048");
           std::cout << AnyToInt(tmp);
         } else if (tmp.type() == typeid(std::string)) {
-          // puts("type : string");
           std::string str = AnyToString(tmp);
           int str_sz = str.size();
           for (int j = 0; j < str_sz; j++) {
@@ -932,38 +908,21 @@ std::any EvalVisitor::visitAtom_expr(Parser::Atom_exprContext *ctx) {
         }
       }
       std::cout << '\n';
-    } else {
-      // puts("try build a function");
+    } else { // My functions
       InitFunction(name, trailer_vector);
-      // puts("build a function");
       std::any ans = visit(functions[name].suite);
-      // puts("visit a function");
       DelVariableStack();
-      // puts("delete a function");
       if (ans.type() == typeid(Control)) {
-        // puts("Switch Control to val");
         ans = std::any_cast<Control>(ans).return_val;
-        // if (ans.type() == typeid(int2048))  puts("type int");
-        // else if (ans.type() == typeid(std::pair<std::string,int>))
-        // puts("ok"); else if (ans.type() == typeid(bool))  puts("type bool");
-        // else if (ans.type() == typeid(std::string)) puts("type string");
-        // else puts("failed");
       }
       return ans;
     }
   } else {
-    // std::any tmp = visit(ctx->atom());
-    // if (tmp.type() == typeid(int2048))  puts("ok");
-    // int2048 val = std::any_cast<int2048>(tmp);
-    // std::cout << "Atom_expr : " << val << '\n';
-    // return tmp;
     return visit(ctx->atom());
   }
-  return std::pair<std::string, int>("None", 0);
 }
 
 std::any EvalVisitor::visitTrailer(Parser::TrailerContext *ctx) {
-  // puts("enter Trailer");
   if (ctx->arglist() != nullptr) {
     return visit(ctx->arglist());
   } else {
@@ -972,14 +931,11 @@ std::any EvalVisitor::visitTrailer(Parser::TrailerContext *ctx) {
 }
 
 std::any EvalVisitor::visitAtom(Parser::AtomContext *ctx) {
-  // puts("enter : atom");
   if (ctx->NAME() != nullptr) {
-    // puts("this is a NAME");
+    // Using pair to distinguish from str
     return std::pair<std::string, int>(ctx->NAME()->getText(), 1);
   } else if (ctx->NUMBER() != nullptr) {
     std::string str = ctx->NUMBER()->getText();
-    // puts("try find number");
-    // std::cout << str << '\n';
     bool flag = 0;
     int sz = str.size();
     for (int i = 0; i < sz; i++) {
@@ -990,29 +946,21 @@ std::any EvalVisitor::visitAtom(Parser::AtomContext *ctx) {
     if (flag == 1) {
       return StringToDouble(str);
     } else {
-      // puts("type = int");
-      // int2048 val = std::any_cast<int2048>(StringToInt(str));
-      // std::cout << "Atom : " << val << '\n';
       return StringToInt(str);
     }
   } else if (ctx->STRING(0) != nullptr) {
-    // puts("try : string");
     std::vector<antlr4::tree::TerminalNode *> string_vector = ctx->STRING();
     std::string ans = "";
     int sz = string_vector.size();
     for (int i = 0; i < sz; i++) {
       std::string str = string_vector[i]->getText();
-      // std::cout << "find string : " << str << '\n';
       int str_sz = str.size();
       for (int j = 1; j + 1 < str_sz; j++) {
         ans += str[j];
       }
     }
-    // std::cout << "ans : " << ans << '\n';
     return ans;
   } else if (ctx->NONE() != nullptr) {
-    // puts("find None");
-    // return (std::string)"None";
     return std::pair<std::string, int>("None", 0);
   } else if (ctx->TRUE() != nullptr) {
     return (bool)true;
@@ -1023,7 +971,6 @@ std::any EvalVisitor::visitAtom(Parser::AtomContext *ctx) {
   } else if (ctx->format_string() != nullptr) {
     return visit(ctx->format_string());
   }
-  return std::pair<std::string, int>("None", 0);
 }
 
 std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
@@ -1035,7 +982,7 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
     auto index1 =
         ctx->FORMAT_STRING_LITERAL(pos1)->getSymbol()->getTokenIndex();
     auto index2 = ctx->CLOSE_BRACE(pos2)->getSymbol()->getTokenIndex();
-    if (index1 < index2) {
+    if (index1 < index2) { // String case
       std::string str = ctx->FORMAT_STRING_LITERAL(pos1)->getText();
       int str_sz = (int)str.size();
       for (int i = 0; i < str_sz; i++) {
@@ -1045,7 +992,7 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
         ans += str[i];
       }
       pos1++;
-    } else {
+    } else { // Testlist case
       std::any res =
           std::any_cast<std::vector<std::any>>(visit(ctx->testlist(pos2)))[0];
       CheckVariable(res);
@@ -1053,7 +1000,7 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
       pos2++;
     }
   }
-  while (pos1 < string_sz) {
+  while (pos1 < string_sz) { // String case
     std::string str = ctx->FORMAT_STRING_LITERAL(pos1)->getText();
     int str_sz = (int)str.size();
     for (int i = 0; i < str_sz; i++) {
@@ -1064,7 +1011,7 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
     }
     pos1++;
   }
-  while (pos2 < testlist_sz) {
+  while (pos2 < testlist_sz) { // Testlist case
     std::any res =
         std::any_cast<std::vector<std::any>>(visit(ctx->testlist(pos2)))[0];
     CheckVariable(res);
@@ -1075,30 +1022,21 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
 }
 
 std::any EvalVisitor::visitTestlist(Parser::TestlistContext *ctx) {
-  // puts("enter : Testlist");
-  // std::cout << ctx->getText() << '\n';
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   std::vector<std::any> ans;
-  // printf("sz = %d\n",(int)test_vector.size());
   for (int i = 0; i < test_vector.size(); i++) {
-    // std::cout << ctx->test(i)->getText() << '\n';
     ans.push_back(visit(test_vector[i]));
   }
-  // puts("leave Testlist");
   return ans;
 }
 
 std::any EvalVisitor::visitArglist(Parser::ArglistContext *ctx) {
-  // puts("enter Arglist");
   std::vector<Python3Parser::ArgumentContext *> argument_vector =
       ctx->argument();
   int sz = argument_vector.size();
   std::vector<std::any> ans;
-  // printf("sz = %d\n",sz);
   for (int i = 0; i < sz; i++) {
     std::any tmp = visit(argument_vector[i]);
-    // if (tmp.type() == typeid(int2048))  puts("ok Arglist");
-    // else puts("failed Arglist");
     if (tmp.type() == typeid(std::vector<std::any>)) {
       std::vector<std::any> temp = std::any_cast<std::vector<std::any>>(tmp);
       for (auto x : temp) {
@@ -1112,22 +1050,15 @@ std::any EvalVisitor::visitArglist(Parser::ArglistContext *ctx) {
 }
 
 std::any EvalVisitor::visitArgument(Parser::ArgumentContext *ctx) {
-  // puts("enter Argument");
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   int sz = test_vector.size();
   if (sz == 1) {
     std::any ans = visit(test_vector[0]);
-    // std::any tmp = ans;
-    // if (tmp.type() == typeid(int2048))  puts("ok Argument");
-    // else puts("failed Argument");
-    // return tmp;
     CheckVariable(ans);
-    // tmp = ans;
-    // if (tmp.type() == typeid(int2048))  puts("ok Argument");
-    // else puts("failed Argument");
     return ans;
   } else {
-    // puts("enter Argument like (A = B)");
+    // Resolve assign operator
+    // We cannot set value here, in case of "foo(a = 1, b = 2)"
     std::any ans = visit(test_vector[1]);
     CheckVariable(ans);
     return std::pair(visit(test_vector[0]), ans);
