@@ -62,7 +62,7 @@ std::string EvalVisitor::AnyToString(std::any tmp) {
     return "None";
   }
   return "";
-};
+}
 
 double EvalVisitor::StringToDouble(std::string str) {
   int sz = str.size(), flag = 1, pos = 0;
@@ -129,7 +129,7 @@ std::string EvalVisitor::DoubleToString(double val) {
     ans = '-' + ans;
   }
   return ans;
-};
+}
 
 std::string EvalVisitor::IntToString(int2048 val) {
   return (std::string)val;
@@ -151,7 +151,7 @@ std::string EvalVisitor::IntToString(int2048 val) {
   }
   return ans;
   */
-};
+}
 
 int2048 EvalVisitor::StringToInt(std::string str) {
   int2048 ans(str);
@@ -176,47 +176,36 @@ int2048 EvalVisitor::StringToInt(std::string str) {
 }
 
 void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
-  // puts("enter : InitFunction");
-  // std::cout << "Function is " << name << '\n';
   std::map<std::string, int> vis;
   for (int i = 0; i < (int)val.size(); i++) {
+    // Resolve situations where variables are used as parameters
     if (val[i].type() == typeid(std::pair<std::any, std::any>)) {
-      // puts("??");
       std::pair<std::any, std::any> tmp =
           std::any_cast<std::pair<std::any, std::any>>(val[i]);
-      // if(tmp.second.type() == typeid(int2048))  printf("ok "),std::cout <<
-      // std::any_cast<int2048>(tmp.second) << '\n'; else puts("failed");
-      // if(tmp.first.type() == typeid(std::pair<std::string, int>)) puts("ok");
-      // else puts("failed");
       if (tmp.first.type() != typeid(std::pair<std::string, int>)) {
-        // puts("KAJSDF;LAJSFDL;JAF");
         CheckVariable(val[i]);
       }
     }
-    // if (val[i].type() != typeid(std::pair<std::pair<std::string, int>,
-    // std::any>)) {
-    //   puts("QQQ");
-    //   CheckVariable(val[i]);
-    // }
   }
   AddVariableStack();
   for (int i = 0; i < (int)val.size(); i++) {
     if (val[i].type() == typeid(std::pair<std::any, std::any>)) {
+      // Resolve keyword argument situations "foo(a=1,b=2)"
       std::pair<std::any, std::any> tmp =
           std::any_cast<std::pair<std::any, std::any>>(val[i]);
-      // if (tmp.first.type() == typeid(std::pair<std::string,int>)) puts("ok");
-      // else puts("failed");
       auto temp = std::any_cast<std::pair<std::string, int>>(tmp.first);
       std::string name = AnyToString(temp.first);
       vis[name] = 1;
       AddValue(name, tmp.second);
     } else {
+      // Resolve positional argument situations "foo(1,2)"
       std::string variable_name = functions[name].parameter_list[i].name;
       vis[variable_name] = 1;
       CheckVariable(val[i]);
       AddValue(variable_name, val[i]);
     }
   }
+  // Assign default values to variables
   for (int i = 0; i < (int)functions[name].parameter_list.size(); i++) {
     std::string variable_name = functions[name].parameter_list[i].name;
     std::any variable_val = functions[name].parameter_list[i].val;
@@ -259,13 +248,10 @@ void EvalVisitor::SetValue(std::string name, std::any val) {
 
 void EvalVisitor::AddValue(std::string name, std::any val) {
   // std::cout << "AddValue : name = " << name << '\n';
-  if (variables_stack.back().find(name) != variables_stack.back().end()) {
-    variables_stack.back()[name] = val;
-  } else {
-    variables_stack.back()[name] = val;
-  }
+  variables_stack.back()[name] = val;
 }
 
+// TODO : rename the function
 void EvalVisitor::CheckVariable(std::any &tmp) {
   if (tmp.type() == typeid(std::pair<std::string, int>)) {
     // puts("this this");
@@ -278,7 +264,7 @@ void EvalVisitor::CheckVariable(std::any &tmp) {
   }
 }
 
-std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
+std::any EvalVisitor::visitFile_input(Parser::File_inputContext *ctx) {
   variables_stack.push_back(std::map<std::string, std::any>());
   for (auto stmt : ctx->stmt()) {
     visit(stmt);
@@ -286,7 +272,8 @@ std::any EvalVisitor::visitFile_input(Python3Parser::File_inputContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
+std::any EvalVisitor::visitFuncdef(Parser::FuncdefContext *ctx) {
+  // build functions[name]
   // puts("enter : Funcdef");
   Function function;
   std::string name = ctx->NAME()->getText();
@@ -304,7 +291,7 @@ std::any EvalVisitor::visitFuncdef(Python3Parser::FuncdefContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
+std::any EvalVisitor::visitParameters(Parser::ParametersContext *ctx) {
   std::vector<Parameter> res;
   if (ctx->typedargslist() != nullptr) {
     res = std::any_cast<std::vector<Parameter>>(visit(ctx->typedargslist()));
@@ -312,8 +299,7 @@ std::any EvalVisitor::visitParameters(Python3Parser::ParametersContext *ctx) {
   return res;
 }
 
-std::any
-EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) {
+std::any EvalVisitor::visitTypedargslist(Parser::TypedargslistContext *ctx) {
   std::vector tfpdef_vector = ctx->tfpdef();
   std::vector test_vector = ctx->test();
   std::vector<Parameter> res;
@@ -333,11 +319,11 @@ EvalVisitor::visitTypedargslist(Python3Parser::TypedargslistContext *ctx) {
   return res;
 }
 
-std::any EvalVisitor::visitTfpdef(Python3Parser::TfpdefContext *ctx) {
+std::any EvalVisitor::visitTfpdef(Parser::TfpdefContext *ctx) {
   return ctx->NAME()->getText();
 }
 
-std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
+std::any EvalVisitor::visitStmt(Parser::StmtContext *ctx) {
   if (ctx->simple_stmt() != nullptr) {
     return visit(ctx->simple_stmt());
   } else {
@@ -345,11 +331,11 @@ std::any EvalVisitor::visitStmt(Python3Parser::StmtContext *ctx) {
   }
 }
 
-std::any EvalVisitor::visitSimple_stmt(Python3Parser::Simple_stmtContext *ctx) {
+std::any EvalVisitor::visitSimple_stmt(Parser::Simple_stmtContext *ctx) {
   return visit(ctx->small_stmt());
 }
 
-std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
+std::any EvalVisitor::visitSmall_stmt(Parser::Small_stmtContext *ctx) {
   if (ctx->expr_stmt() != nullptr) {
     return visit(ctx->expr_stmt());
   } else {
@@ -357,30 +343,23 @@ std::any EvalVisitor::visitSmall_stmt(Python3Parser::Small_stmtContext *ctx) {
   }
 }
 
-std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
-  // puts("enter : Expr_stmt");
+std::any EvalVisitor::visitExpr_stmt(Parser::Expr_stmtContext *ctx) {
   std::vector<Python3Parser::TestlistContext *> testlist_vector =
       ctx->testlist();
   int sz = testlist_vector.size();
-  // printf("sz = %d\n",sz);
-  // printf("=sz = %d\n",(int)ctx->ASSIGN().size());
-  if (sz == 1) {
+  
+  if (sz == 1) { // No augassign or assign operator
     return visit(testlist_vector[0]);
   }
   if (ctx->augassign() != nullptr) {
-    // puts("QwQ");
+    // Augassign operator : "name op tmp"
     std::string op = AnyToString(visit(ctx->augassign()));
-    // puts("QwQ");
     std::vector<std::any> tmp_name =
         std::any_cast<std::vector<std::any>>(visit(testlist_vector[0]));
     std::string name =
         (std::any_cast<std::pair<std::string, int>>(tmp_name[0])).first;
-    // std::string name = std::any_cast<std::vector
-    // <std::pair<std::string,int>>>(visit(testlist_vector[0]))[0].first;
-    // puts("QwQ");
     std::any tmp =
         std::any_cast<std::vector<std::any>>(visit(testlist_vector[1]))[0];
-    // puts("QwQ");
     CheckVariable(tmp);
     std::any ans = GetValue(name);
     if (op == "+=") {
@@ -398,16 +377,10 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
         ans = AnyToInt(ans) - AnyToInt(tmp);
       }
     } else if (op == "*=") {
-      // puts("operator *=");
       if (ans.type() == typeid(std::string)) {
-        // puts("operator string *");
         std::string str = AnyToString(ans), res = "";
         int2048 len = AnyToInt(tmp);
-        // std::cout << "len = " << len << '\n';
-        // printf("%d\n",len.CheckZero());
-        // while (len--) {
         while (len.CheckZero() == 0 && len.getsign() == 1) {
-          // puts("QwQ");
           len.minus1();
           res += str;
         }
@@ -434,7 +407,7 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
     }
     SetValue(name, ans);
   } else {
-    // puts("QwQ");
+    // Assign operator
     std::vector<std::any> res =
         std::any_cast<std::vector<std::any>>(visit(testlist_vector[sz - 1]));
     std::vector<std::any> ans;
@@ -449,25 +422,15 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
         ans.push_back(res[i]);
       }
     }
-    // printf("ans.size() = %d\n",(int)ans.size());
     for (int i = 0; i < ans.size(); i++) {
       CheckVariable(ans[i]);
-      // if (ans[i].type() == typeid(int2048)) puts("ok
-      // type"),printf("%lld\n",std::any_cast<int2048>(ans[i])); else
-      // puts("wrong type");
     }
     for (int i = sz - 2; i >= 0; i--) {
-      // puts("QwQ");
       std::vector<std::any> tmp =
           std::any_cast<std::vector<std::any>>(visit(testlist_vector[i]));
-      // std::vector <std::pair<std::string,int>> tmp =
-      // std::any_cast<std::vector
-      // <std::pair<std::string,int>>>(ctx->visit(testlist_vector[i]));
-      // puts("QwQ");
       for (int j = 0; j < ans.size(); j++) {
         std::pair<std::string, int> temp =
             std::any_cast<std::pair<std::string, int>>(tmp[j]);
-        // std::cout << temp.first << ' ' << temp.second << '\n';
         SetValue(temp.first, ans[j]);
       }
     }
@@ -475,7 +438,7 @@ std::any EvalVisitor::visitExpr_stmt(Python3Parser::Expr_stmtContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
+std::any EvalVisitor::visitAugassign(Parser::AugassignContext *ctx) {
   if (ctx->ADD_ASSIGN() != nullptr) {
     return (std::string) "+=";
   } else if (ctx->SUB_ASSIGN() != nullptr) {
@@ -492,8 +455,7 @@ std::any EvalVisitor::visitAugassign(Python3Parser::AugassignContext *ctx) {
   return 0;
 }
 
-std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
-  // puts("enter Flow_stmt");
+std::any EvalVisitor::visitFlow_stmt(Parser::Flow_stmtContext *ctx) {
   if (ctx->break_stmt() != nullptr) {
     return visit(ctx->break_stmt());
   } else if (ctx->continue_stmt()) {
@@ -504,20 +466,17 @@ std::any EvalVisitor::visitFlow_stmt(Python3Parser::Flow_stmtContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitBreak_stmt(Python3Parser::Break_stmtContext *ctx) {
+std::any EvalVisitor::visitBreak_stmt(Parser::Break_stmtContext *ctx) {
   Control ans(2);
   return ans;
 }
 
-std::any
-EvalVisitor::visitContinue_stmt(Python3Parser::Continue_stmtContext *ctx) {
+std::any EvalVisitor::visitContinue_stmt(Parser::Continue_stmtContext *ctx) {
   Control ans(1);
   return ans;
 }
 
-std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
-  // puts("enter Return_stmt");
-
+std::any EvalVisitor::visitReturn_stmt(Parser::Return_stmtContext *ctx) {
   Control ans(3);
   ans.return_val = std::pair<std::string, int>("None", 0);
   if (ctx->testlist() != nullptr) {
@@ -527,25 +486,18 @@ std::any EvalVisitor::visitReturn_stmt(Python3Parser::Return_stmtContext *ctx) {
       CheckVariable(tmp[i]);
     }
     if (tmp.size() == 1) {
-      // if (tmp[0].type() == typeid(int2048)) {
-      //   printf("return val = %lld\n",AnyToInt(tmp[0]));
-      // }
+      // Only one return value, set return_val to std::any type
       Control res(3);
       res.return_val = tmp[0];
       return res;
     }
+    // Multiple return value, set return_val to std::vector type
     ans.return_val = tmp;
   }
-  // TODO: 变量 -> 值
-  //  if (ans.return_val.size() == 1) {
-  //    return ans[0];
-  //  } else {
   return ans;
-  // }
 }
 
-std::any
-EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
+std::any EvalVisitor::visitCompound_stmt(Parser::Compound_stmtContext *ctx) {
   if (ctx->if_stmt() != nullptr) {
     return visit(ctx->if_stmt());
   } else if (ctx->while_stmt()) {
@@ -555,54 +507,38 @@ EvalVisitor::visitCompound_stmt(Python3Parser::Compound_stmtContext *ctx) {
   }
 }
 
-std::any EvalVisitor::visitIf_stmt(Python3Parser::If_stmtContext *ctx) {
-  // puts("enter If_stmt");
+std::any EvalVisitor::visitIf_stmt(Parser::If_stmtContext *ctx) {
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   std::vector<Python3Parser::SuiteContext *> suite_vector = ctx->suite();
   for (int i = 0; i < (int)test_vector.size(); i++) {
     std::any tmp = visit(test_vector[i]);
     if (AnyToBool(tmp)) {
-      // puts("enter if_suite");
       return visit(suite_vector[i]);
     }
   }
+  // Visit else branch
   if (test_vector.size() != suite_vector.size()) {
-    // puts("enter else");
-    // std::any res = visit(suite_vector.back());
-    // if (res.type() == typeid(Control))  puts("type Control");
-    // else if (res.type() == typeid(int2048)) puts("type int");
-    // else puts("failed");
-    // return res;
-
     return visit(suite_vector.back());
   }
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitWhile_stmt(Python3Parser::While_stmtContext *ctx) {
-  // puts("enter While_stmt");
-  // std::any res = AnyToBool(visit(ctx->test()));
-  // if (res.type() == typeid(bool)) puts("ok");
-  // else puts("failed");
-  // printf("%d\n",AnyToBool(res));
+std::any EvalVisitor::visitWhile_stmt(Parser::While_stmtContext *ctx) {
   while (AnyToBool(visit(ctx->test()))) {
     std::any ans = visit(ctx->suite());
-    // puts("visit a suite");
     if (ans.type() == typeid(Control)) {
-      // puts("this is a Control");
       Control res = std::any_cast<Control>(ans);
-      if (res.op == 2) {
+      if (res.op == 2) { // Break case
         return std::pair<std::string, int>("None", 0);
-      } else if (res.op == 3) {
+      } else if (res.op == 3) { // Return case
         return res;
       }
     }
   }
-  // puts("leave While_stmt");
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
+std::any EvalVisitor::visitSuite(Parser::SuiteContext *ctx) {
   if (ctx->simple_stmt() != nullptr) {
     return visit(ctx->simple_stmt());
   } else {
@@ -610,7 +546,6 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
     for (int i = 0; i < stmt_vector.size(); i++) {
       std::any tmp = visit(stmt_vector[i]);
       if (tmp.type() == typeid(Control)) {
-        // puts("this is a Control");
         return tmp;
       }
     }
@@ -618,28 +553,14 @@ std::any EvalVisitor::visitSuite(Python3Parser::SuiteContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitTest(Python3Parser::TestContext *ctx) {
-  // puts("enter test");
-  // std::any tmp = visit(ctx->or_test());
-  // if (tmp.type() == typeid(bool))
-  // {
-  //   puts("ok Test");
-  //   bool val = std::any_cast<bool>(tmp);
-  //   std::cout << "test : " << val << '\n';
-  // }
-  // else puts("failed Test");
-  // return tmp;
-
-  // std::any res = visit(ctx->or_test());
-  // puts("leave test");
-  // return res;
+std::any EvalVisitor::visitTest(Parser::TestContext *ctx) {
   return visit(ctx->or_test());
 }
 
-std::any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
+std::any EvalVisitor::visitOr_test(Parser::Or_testContext *ctx) {
   std::vector<Python3Parser::And_testContext *> and_vector = ctx->and_test();
   int sz = and_vector.size();
-  if (sz == 1) {
+  if (sz == 1) { // No or operator
     return visit(and_vector[0]);
   }
   std::any res;
@@ -650,17 +571,13 @@ std::any EvalVisitor::visitOr_test(Python3Parser::Or_testContext *ctx) {
       return (bool)true;
     }
   }
-  // std::any tmp = res;
-  // if (tmp.type() == typeid(std::string))  puts("ok Or_test");
-  // else puts("failed Or_test");
-  // return tmp;
   return (bool)false;
 }
 
-std::any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
+std::any EvalVisitor::visitAnd_test(Parser::And_testContext *ctx) {
   std::vector<Python3Parser::Not_testContext *> not_vector = ctx->not_test();
   int sz = not_vector.size();
-  if (sz == 1) {
+  if (sz == 1) { // No and operator
     return visit(not_vector[0]);
   }
   std::any res = (bool)true;
@@ -671,36 +588,27 @@ std::any EvalVisitor::visitAnd_test(Python3Parser::And_testContext *ctx) {
       return (bool)false;
     }
   }
-  // std::any tmp = res;
-  // if (tmp.type() == typeid(std::string))  puts("ok And_test");
-  // else puts("failed And_test");
-  // return tmp;
-
   return (bool)true;
 }
 
-std::any EvalVisitor::visitNot_test(Python3Parser::Not_testContext *ctx) {
+std::any EvalVisitor::visitNot_test(Parser::Not_testContext *ctx) {
   if (ctx->not_test() != nullptr) {
     std::any tmp = visit(ctx->not_test());
-    // if (tmp.type() == typeid(bool)) puts("ok");
-    // else if (tmp.type() == typeid(std::pair<std::string,int>)) puts("wrong");
-    // else puts("failed");
     CheckVariable(tmp);
     bool res = AnyToBool(tmp);
-    // printf("res = %d\n",res);
     return !res;
   } else {
     return visit(ctx->comparison());
   }
 }
 
-std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
+std::any EvalVisitor::visitComparison(Parser::ComparisonContext *ctx) {
   std::vector<Python3Parser::Arith_exprContext *> arith_expr_vector =
       ctx->arith_expr();
   std::vector<Python3Parser::Comp_opContext *> comp_op_vector = ctx->comp_op();
   int sz = arith_expr_vector.size();
   std::any ans = visit(arith_expr_vector[0]);
-  if (sz == 1) {
+  if (sz == 1) { // No comparison operator
     return ans;
   }
   for (int i = 1; i < sz; i++) {
@@ -711,7 +619,6 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
     bool nxt_none = (nxt.type() == typeid(std::pair<std::string, int>));
     std::string op = AnyToString(visit(comp_op_vector[i - 1]));
     if (op == "<") {
-      // puts("operator < ");
       if (ans.type() == typeid(std::string)) {
         if (AnyToString(ans) >= AnyToString(nxt)) {
           return (bool)false;
@@ -721,7 +628,6 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
           return (bool)false;
         }
       } else if (AnyToInt(ans) >= AnyToInt(nxt)) {
-        // puts("return bool False");
         return (bool)false;
       }
     } else if (op == ">") {
@@ -749,8 +655,6 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == ">=") {
-      // printf("operator >= ,ans.val = %lld,nxt.val = %lld,res =
-      // %d\n",AnyToInt(ans),AnyToInt(nxt),AnyToInt(ans) < AnyToInt(nxt));
       if (ans.type() == typeid(std::string)) {
         if (AnyToString(ans) < AnyToString(nxt)) {
           return (bool)false;
@@ -763,7 +667,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == "==") {
-      if (ans_none || nxt_none) {
+      if (ans_none || nxt_none) { // Resolve None == operator
         if (!ans_none || !nxt_none) {
           return (bool)false;
         }
@@ -771,6 +675,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
                  nxt.type() == typeid(std::string)) {
         if (nxt.type() != typeid(std::string) ||
             ans.type() != typeid(std::string)) {
+          // Resolve str == others
           return (bool)false;
         }
         if (AnyToString(ans) != AnyToString(nxt)) {
@@ -784,7 +689,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     } else if (op == "!=") {
-      if (ans_none || nxt_none) {
+      if (ans_none || nxt_none) { // Resolve None != operator
         if (ans_none && nxt_none) {
           return (bool)false;
         }
@@ -793,6 +698,7 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
           nxt.type() == typeid(std::string)) {
         if (ans.type() != typeid(std::string) ||
             nxt.type() != typeid(std::string)) {
+          // Resolve str == others
           return (bool)false;
         }
         if (AnyToString(ans) == AnyToString(nxt)) {
@@ -806,17 +712,12 @@ std::any EvalVisitor::visitComparison(Python3Parser::ComparisonContext *ctx) {
         return (bool)false;
       }
     }
-    ans = nxt;
+    ans = nxt; // Only calculate once
   }
-  // std::any tmp = ans;
-  // if (tmp.type() == typeid(std::string))  puts("ok Comparison");
-  // else puts("failed Comparison");
-  // return tmp;
-  // puts("leave Comparison with return val = true");
   return (bool)true;
 }
 
-std::any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
+std::any EvalVisitor::visitComp_op(Parser::Comp_opContext *ctx) {
   if (ctx->LESS_THAN() != nullptr) {
     return (std::string) "<";
   } else if (ctx->GREATER_THAN() != nullptr) {
@@ -833,27 +734,18 @@ std::any EvalVisitor::visitComp_op(Python3Parser::Comp_opContext *ctx) {
   return -1;
 }
 
-std::any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
-  // puts("enter : Arith_expr");
+std::any EvalVisitor::visitArith_expr(Parser::Arith_exprContext *ctx) {
   std::vector<Python3Parser::TermContext *> term_vector = ctx->term();
   std::vector<Python3Parser::Addorsub_opContext *> addorsub_op_vector =
       ctx->addorsub_op();
   std::any ans = visit(term_vector[0]);
-  // std::any tmp = ans;
-  // if (tmp.type() == typeid(int2048))  puts("ok Arith_expr");
-  // else puts("failed Arith_expr");
-  // return tmp;
-
   int sz = term_vector.size();
   for (int i = 1; i < sz; i++) {
     std::any tmp = visit(term_vector[i]);
     std::string op = AnyToString(visit(addorsub_op_vector[i - 1]));
     CheckVariable(ans);
     CheckVariable(tmp);
-    // puts("QwQ");
-    // std::cout << op << '\n';
     if (op == "+") {
-      // puts("operator + ");
       if (ans.type() == typeid(std::string) &&
           tmp.type() == typeid(std::string)) {
         ans = AnyToString(ans) + AnyToString(tmp);
@@ -873,7 +765,7 @@ std::any EvalVisitor::visitArith_expr(Python3Parser::Arith_exprContext *ctx) {
   return ans;
 }
 
-std::any EvalVisitor::visitAddorsub_op(Python3Parser::Addorsub_opContext *ctx) {
+std::any EvalVisitor::visitAddorsub_op(Parser::Addorsub_opContext *ctx) {
   if (ctx->ADD() != nullptr) {
     return (std::string) "+";
   } else if (ctx->MINUS() != nullptr) {
@@ -882,7 +774,7 @@ std::any EvalVisitor::visitAddorsub_op(Python3Parser::Addorsub_opContext *ctx) {
   return 0;
 }
 
-std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
+std::any EvalVisitor::visitTerm(Parser::TermContext *ctx) {
   // puts("enter : term");
   std::vector<Python3Parser::FactorContext *> factor_vector = ctx->factor();
   std::vector<Python3Parser::Muldivmod_opContext *> muldivmod_op_vector =
@@ -935,8 +827,7 @@ std::any EvalVisitor::visitTerm(Python3Parser::TermContext *ctx) {
   return ans;
 }
 
-std::any
-EvalVisitor::visitMuldivmod_op(Python3Parser::Muldivmod_opContext *ctx) {
+std::any EvalVisitor::visitMuldivmod_op(Parser::Muldivmod_opContext *ctx) {
   if (ctx->STAR() != nullptr) {
     return (std::string) "*";
   } else if (ctx->DIV() != nullptr) {
@@ -949,7 +840,7 @@ EvalVisitor::visitMuldivmod_op(Python3Parser::Muldivmod_opContext *ctx) {
   return 0;
 }
 
-std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
+std::any EvalVisitor::visitFactor(Parser::FactorContext *ctx) {
   // puts("enter factor");
   if (ctx->atom_expr() != nullptr) {
     // std::any tmp = visit(ctx->atom_expr());
@@ -981,7 +872,7 @@ std::any EvalVisitor::visitFactor(Python3Parser::FactorContext *ctx) {
   }
 }
 
-std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
+std::any EvalVisitor::visitAtom_expr(Parser::Atom_exprContext *ctx) {
   // puts("enter : Atom_expr");
   if (ctx->trailer() != nullptr) {
     std::pair<std::string, int> tmp =
@@ -1071,7 +962,7 @@ std::any EvalVisitor::visitAtom_expr(Python3Parser::Atom_exprContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
+std::any EvalVisitor::visitTrailer(Parser::TrailerContext *ctx) {
   // puts("enter Trailer");
   if (ctx->arglist() != nullptr) {
     return visit(ctx->arglist());
@@ -1080,7 +971,7 @@ std::any EvalVisitor::visitTrailer(Python3Parser::TrailerContext *ctx) {
   }
 }
 
-std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
+std::any EvalVisitor::visitAtom(Parser::AtomContext *ctx) {
   // puts("enter : atom");
   if (ctx->NAME() != nullptr) {
     // puts("this is a NAME");
@@ -1135,8 +1026,7 @@ std::any EvalVisitor::visitAtom(Python3Parser::AtomContext *ctx) {
   return std::pair<std::string, int>("None", 0);
 }
 
-std::any
-EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {
+std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
   int string_sz = (int)ctx->FORMAT_STRING_LITERAL().size();
   int testlist_sz = (int)ctx->testlist().size();
   int pos1 = 0, pos2 = 0;
@@ -1184,7 +1074,7 @@ EvalVisitor::visitFormat_string(Python3Parser::Format_stringContext *ctx) {
   return ans;
 }
 
-std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
+std::any EvalVisitor::visitTestlist(Parser::TestlistContext *ctx) {
   // puts("enter : Testlist");
   // std::cout << ctx->getText() << '\n';
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
@@ -1198,7 +1088,7 @@ std::any EvalVisitor::visitTestlist(Python3Parser::TestlistContext *ctx) {
   return ans;
 }
 
-std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
+std::any EvalVisitor::visitArglist(Parser::ArglistContext *ctx) {
   // puts("enter Arglist");
   std::vector<Python3Parser::ArgumentContext *> argument_vector =
       ctx->argument();
@@ -1221,7 +1111,7 @@ std::any EvalVisitor::visitArglist(Python3Parser::ArglistContext *ctx) {
   return ans;
 }
 
-std::any EvalVisitor::visitArgument(Python3Parser::ArgumentContext *ctx) {
+std::any EvalVisitor::visitArgument(Parser::ArgumentContext *ctx) {
   // puts("enter Argument");
   std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
   int sz = test_vector.size();
