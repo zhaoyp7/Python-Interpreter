@@ -35,7 +35,7 @@ int2048 EvalVisitor::AnyToInt(std::any tmp) {
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp);
   } else if (tmp.type() == typeid(std::string)) {
-    return StringToInt(std::any_cast<std::string>(tmp));
+    return int2048(std::any_cast<std::string>(tmp));
   } else if (tmp.type() == typeid(double)) {
     return std::any_cast<double>(tmp);
   } else if (tmp.type() == typeid(int2048)) {
@@ -53,7 +53,7 @@ std::string EvalVisitor::AnyToString(std::any tmp) {
   } else if (tmp.type() == typeid(double)) {
     return DoubleToString(std::any_cast<double>(tmp));
   } else if (tmp.type() == typeid(int2048)) {
-    return IntToString(std::any_cast<int2048>(tmp));
+    return (std::string)(std::any_cast<int2048>(tmp));
   } else if (tmp.type() == typeid(std::pair<std::string, int>)) {
     return "None";
   }
@@ -118,15 +118,6 @@ std::string EvalVisitor::DoubleToString(double val) {
   return ans;
 }
 
-std::string EvalVisitor::IntToString(const int2048 &val) {
-  return (std::string)val;
-}
-
-int2048 EvalVisitor::StringToInt(const std::string &str) {
-  int2048 ans(str);
-  return ans;
-}
-
 void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
   std::map<std::string, int> vis;
   for (int i = 0; i < (int)val.size(); i++) {
@@ -176,8 +167,7 @@ std::any EvalVisitor::GetValue(std::any variable) {
   }
 }
 
-void EvalVisitor::SetValue(std::string name, std::any val) {
-  // std::cout << "SetValue : name = " << name << '\n';
+void EvalVisitor::SetValue(const std::string &name, std::any val) {
   if (variables_stack.back().find(name) != variables_stack.back().end()) {
     variables_stack.back()[name] = val;
   } else if (variables_stack.front().find(name) !=
@@ -188,8 +178,7 @@ void EvalVisitor::SetValue(std::string name, std::any val) {
   }
 }
 
-void EvalVisitor::AddValue(std::string name, std::any val) {
-  // std::cout << "AddValue : name = " << name << '\n';
+void EvalVisitor::AddValue(const std::string &name, std::any val) {
   variables_stack.back()[name] = val;
 }
 
@@ -888,7 +877,7 @@ std::any EvalVisitor::visitAtom(Parser::AtomContext *ctx) {
     if (flag == 1) {
       return StringToDouble(str);
     } else {
-      return StringToInt(str);
+      return int2048(str);
     }
   } else if (ctx->STRING(0) != nullptr) {
     std::vector<antlr4::tree::TerminalNode *> string_vector = ctx->STRING();

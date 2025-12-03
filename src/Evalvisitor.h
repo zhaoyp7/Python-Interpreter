@@ -40,12 +40,9 @@ private:
   std::string AnyToString(std::any);
   double StringToDouble(const std::string &);
   std::string DoubleToString(double);
-  std::string IntToString(const int2048 &);
-  int2048 StringToInt(const std::string &);
-  void SetValue(std::string, std::any);
-  void AddValue(std::string, std::any);
+  void SetValue(const std::string &, std::any);
+  void AddValue(const std::string &, std::any);
   void VariableToVal(std::any &);
-  bool IsVariable(std::string);
   void AddVariableStack() {
     variables_stack.push_back(std::map<std::string, std::any>());
   }
@@ -54,7 +51,6 @@ private:
   std::map<std::string, Function> functions;
 
 public:
-  // TODO: override all methods of Python3ParserBaseVisitor
   std::any visitFile_input(Parser::File_inputContext *) override;
   std::any visitFuncdef(Parser::FuncdefContext *) override;
   std::any visitParameters(Parser::ParametersContext *) override;
