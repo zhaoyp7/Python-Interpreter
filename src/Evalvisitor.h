@@ -38,13 +38,13 @@ private:
   double AnyToDouble(std::any);
   int2048 AnyToInt(std::any);
   std::string AnyToString(std::any);
-  double StringToDouble(std::string);
+  double StringToDouble(const std::string &);
   std::string DoubleToString(double);
-  std::string IntToString(int2048);
-  int2048 StringToInt(std::string);
+  std::string IntToString(const int2048 &);
+  int2048 StringToInt(const std::string &);
   void SetValue(std::string, std::any);
   void AddValue(std::string, std::any);
-  void CheckVariable(std::any &);
+  void VariableToVal(std::any &);
   bool IsVariable(std::string);
   void AddVariableStack() {
     variables_stack.push_back(std::map<std::string, std::any>());

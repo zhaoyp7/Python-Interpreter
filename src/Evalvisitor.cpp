@@ -3,7 +3,7 @@
 #include <any>
 
 bool EvalVisitor::AnyToBool(std::any tmp) {
-  CheckVariable(tmp);
+  VariableToVal(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp);
   } else if (tmp.type() == typeid(std::string)) {
@@ -11,14 +11,13 @@ bool EvalVisitor::AnyToBool(std::any tmp) {
   } else if (tmp.type() == typeid(double)) {
     return std::any_cast<double>(tmp);
   } else if (tmp.type() == typeid(int2048)) {
-    // return std::any_cast<int2048>(tmp);
     return !std::any_cast<int2048>(tmp).CheckZero();
   }
   return (bool)false;
 }
 
 double EvalVisitor::AnyToDouble(std::any tmp) {
-  CheckVariable(tmp);
+  VariableToVal(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp) ? 1 : 0;
   } else if (tmp.type() == typeid(std::string)) {
@@ -27,13 +26,12 @@ double EvalVisitor::AnyToDouble(std::any tmp) {
     return std::any_cast<double>(tmp);
   } else if (tmp.type() == typeid(int2048)) {
     return std::any_cast<int2048>(tmp);
-    // return std::any_cast<long long>(tmp);
   }
   return 0;
 }
 
 int2048 EvalVisitor::AnyToInt(std::any tmp) {
-  CheckVariable(tmp);
+  VariableToVal(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp);
   } else if (tmp.type() == typeid(std::string)) {
@@ -41,15 +39,13 @@ int2048 EvalVisitor::AnyToInt(std::any tmp) {
   } else if (tmp.type() == typeid(double)) {
     return std::any_cast<double>(tmp);
   } else if (tmp.type() == typeid(int2048)) {
-    // puts("get int2048  get int2048  get int2048  get int2048");
     return std::any_cast<int2048>(tmp);
   }
   return 0;
-  // return int2048();
 }
 
 std::string EvalVisitor::AnyToString(std::any tmp) {
-  CheckVariable(tmp);
+  VariableToVal(tmp);
   if (tmp.type() == typeid(bool)) {
     return std::any_cast<bool>(tmp) ? "True" : "False";
   } else if (tmp.type() == typeid(std::string)) {
@@ -64,7 +60,7 @@ std::string EvalVisitor::AnyToString(std::any tmp) {
   return "";
 }
 
-double EvalVisitor::StringToDouble(std::string str) {
+double EvalVisitor::StringToDouble(const std::string &str) {
   int sz = str.size(), flag = 1, pos = 0;
   double ans = 0, val = 1;
   if (str[pos] == '+') {
@@ -94,10 +90,6 @@ double EvalVisitor::StringToDouble(std::string str) {
 std::string EvalVisitor::DoubleToString(double val) {
   int flag = (val >= 0 ? 1 : -1);
   val = std::abs(val);
-  // long long temp = val * 1000000 + 0.5;
-  // printf("temp = %lld\n",temp);
-  // val = temp * 0.000001;
-  // printf("val = %.9lf\n",val);
   long long tmp = (long long)val;
   std::string ans = "";
   val = val - tmp;
@@ -120,59 +112,19 @@ std::string EvalVisitor::DoubleToString(double val) {
   for (int j = ans.size() - 1, i = j - 5; i < j; i++, j--) {
     std::swap(ans[i], ans[j]);
   }
-  // for (int i = 1; i <= 6; i++) {
-  //   val *= 10;
-  //   ans += int(val) + '0';
-  //   val = val - int(val);
-  // }
   if (flag == -1) {
     ans = '-' + ans;
   }
   return ans;
 }
 
-std::string EvalVisitor::IntToString(int2048 val) {
+std::string EvalVisitor::IntToString(const int2048 &val) {
   return (std::string)val;
-  /*
-  std::string ans = "";
-  int flag = (val >= 0 ? 1 : -1);
-  if (flag == -1) {
-    val = -val;
-  }
-  while (val) {
-    ans += val % 10 + '0';
-    val /= 10;
-  }
-  for (int i = 0, j = ans.size() - 1; i < j; i++, j--){
-    std::swap(ans[i], ans[j]);
-  }
-  if (flag == -1) {
-    ans = '-' + ans;
-  }
-  return ans;
-  */
 }
 
-int2048 EvalVisitor::StringToInt(std::string str) {
+int2048 EvalVisitor::StringToInt(const std::string &str) {
   int2048 ans(str);
   return ans;
-  /*
-  // std::cout << str << '\n';
-  int sz = str.size(), flag = 1, pos = 0;
-  int2048 ans = 0;
-  if (str[pos] == '+') {
-    pos++;
-  } else if (str[pos] == '-') {
-    pos++;
-    flag = -1;
-  }
-  while (pos < sz) {
-    ans = ans * 10 + str[pos] - '0';
-    pos++;
-  }
-  // printf("asdfj;lasjfd;asdf : %lld\n",ans);
-  return flag * ans;
-  */
 }
 
 void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
@@ -183,7 +135,7 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
       std::pair<std::any, std::any> tmp =
           std::any_cast<std::pair<std::any, std::any>>(val[i]);
       if (tmp.first.type() != typeid(std::pair<std::string, int>)) {
-        CheckVariable(val[i]);
+        VariableToVal(val[i]);
       }
     }
   }
@@ -201,7 +153,7 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
       // Resolve positional argument situations "foo(1,2)"
       std::string variable_name = functions[name].parameter_list[i].name;
       vis[variable_name] = 1;
-      CheckVariable(val[i]);
+      VariableToVal(val[i]);
       AddValue(variable_name, val[i]);
     }
   }
@@ -213,16 +165,6 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
       AddValue(variable_name, variable_val);
     }
   }
-}
-
-bool EvalVisitor::IsVariable(std::string name) {
-  if (variables_stack.back().find(name) != variables_stack.back().end()) {
-    return 1;
-  } else if (variables_stack.front().find(name) !=
-             variables_stack.front().end()) {
-    return 1;
-  }
-  return 0;
 }
 
 std::any EvalVisitor::GetValue(std::any variable) {
@@ -251,8 +193,7 @@ void EvalVisitor::AddValue(std::string name, std::any val) {
   variables_stack.back()[name] = val;
 }
 
-// TODO : rename the function
-void EvalVisitor::CheckVariable(std::any &tmp) {
+void EvalVisitor::VariableToVal(std::any &tmp) {
   if (tmp.type() == typeid(std::pair<std::string, int>)) {
     // puts("this this");
     std::pair<std::string, int> temp =
@@ -360,7 +301,7 @@ std::any EvalVisitor::visitExpr_stmt(Parser::Expr_stmtContext *ctx) {
         (std::any_cast<std::pair<std::string, int>>(tmp_name[0])).first;
     std::any tmp =
         std::any_cast<std::vector<std::any>>(visit(testlist_vector[1]))[0];
-    CheckVariable(tmp);
+    VariableToVal(tmp);
     std::any ans = GetValue(name);
     if (op == "+=") {
       if (tmp.type() == typeid(std::string)) {
@@ -423,7 +364,7 @@ std::any EvalVisitor::visitExpr_stmt(Parser::Expr_stmtContext *ctx) {
       }
     }
     for (int i = 0; i < ans.size(); i++) {
-      CheckVariable(ans[i]);
+      VariableToVal(ans[i]);
     }
     for (int i = sz - 2; i >= 0; i--) {
       std::vector<std::any> tmp =
@@ -483,7 +424,7 @@ std::any EvalVisitor::visitReturn_stmt(Parser::Return_stmtContext *ctx) {
     std::vector<std::any> tmp =
         std::any_cast<std::vector<std::any>>(visit(ctx->testlist()));
     for (int i = 0; i < (int)tmp.size(); i++) {
-      CheckVariable(tmp[i]);
+      VariableToVal(tmp[i]);
     }
     if (tmp.size() == 1) {
       // Only one return value, set return_val to std::any type
@@ -566,7 +507,7 @@ std::any EvalVisitor::visitOr_test(Parser::Or_testContext *ctx) {
   std::any res;
   for (int i = 0; i < sz; i++) {
     res = visit(and_vector[i]);
-    CheckVariable(res);
+    VariableToVal(res);
     if (AnyToBool(res)) {
       return (bool)true;
     }
@@ -583,7 +524,7 @@ std::any EvalVisitor::visitAnd_test(Parser::And_testContext *ctx) {
   std::any res = (bool)true;
   for (int i = 0; i < sz; i++) {
     res = visit(not_vector[i]);
-    CheckVariable(res);
+    VariableToVal(res);
     if (!AnyToBool(res)) {
       return (bool)false;
     }
@@ -594,7 +535,7 @@ std::any EvalVisitor::visitAnd_test(Parser::And_testContext *ctx) {
 std::any EvalVisitor::visitNot_test(Parser::Not_testContext *ctx) {
   if (ctx->not_test() != nullptr) {
     std::any tmp = visit(ctx->not_test());
-    CheckVariable(tmp);
+    VariableToVal(tmp);
     bool res = AnyToBool(tmp);
     return !res;
   } else {
@@ -613,8 +554,8 @@ std::any EvalVisitor::visitComparison(Parser::ComparisonContext *ctx) {
   }
   for (int i = 1; i < sz; i++) {
     std::any nxt = visit(arith_expr_vector[i]);
-    CheckVariable(ans);
-    CheckVariable(nxt);
+    VariableToVal(ans);
+    VariableToVal(nxt);
     bool ans_none = (ans.type() == typeid(std::pair<std::string, int>));
     bool nxt_none = (nxt.type() == typeid(std::pair<std::string, int>));
     std::string op = AnyToString(visit(comp_op_vector[i - 1]));
@@ -743,8 +684,8 @@ std::any EvalVisitor::visitArith_expr(Parser::Arith_exprContext *ctx) {
   for (int i = 1; i < sz; i++) {
     std::any tmp = visit(term_vector[i]);
     std::string op = AnyToString(visit(addorsub_op_vector[i - 1]));
-    CheckVariable(ans);
-    CheckVariable(tmp);
+    VariableToVal(ans);
+    VariableToVal(tmp);
     if (op == "+") {
       if (ans.type() == typeid(std::string) &&
           tmp.type() == typeid(std::string)) {
@@ -782,8 +723,8 @@ std::any EvalVisitor::visitTerm(Parser::TermContext *ctx) {
   int sz = factor_vector.size();
   for (int i = 1; i < sz; i++) {
     std::any tmp = visit(factor_vector[i]);
-    CheckVariable(ans);
-    CheckVariable(tmp);
+    VariableToVal(ans);
+    VariableToVal(tmp);
     std::string op = AnyToString(visit(muldivmod_op_vector[i - 1]));
     if (op == "*") {
       if (ans.type() == typeid(std::string)) {
@@ -836,11 +777,11 @@ std::any EvalVisitor::visitFactor(Parser::FactorContext *ctx) {
     return visit(ctx->atom_expr());
   } else if (ctx->ADD() != nullptr) {
     std::any ans = visit(ctx->factor());
-    CheckVariable(ans);
+    VariableToVal(ans);
     return ans;
   } else if (ctx->MINUS() != nullptr) {
     std::any ans = visit(ctx->factor());
-    CheckVariable(ans);
+    VariableToVal(ans);
     if (ans.type() == typeid(double)) {
       if (AnyToDouble(ans)) {
         ans = -AnyToDouble(ans);
@@ -872,7 +813,7 @@ std::any EvalVisitor::visitAtom_expr(Parser::Atom_exprContext *ctx) {
     } else if (name == "print") {
       for (int i = 0; i < (int)trailer_vector.size(); i++) {
         std::any tmp = trailer_vector[i];
-        CheckVariable(tmp);
+        VariableToVal(tmp);
         if (tmp.type() == typeid(std::pair<std::string, int>)) {
           printf("None");
         } else if (tmp.type() == typeid(double)) {
@@ -920,6 +861,7 @@ std::any EvalVisitor::visitAtom_expr(Parser::Atom_exprContext *ctx) {
   } else {
     return visit(ctx->atom());
   }
+  return std::pair<std::string, int>("None", 0);
 }
 
 std::any EvalVisitor::visitTrailer(Parser::TrailerContext *ctx) {
@@ -971,6 +913,7 @@ std::any EvalVisitor::visitAtom(Parser::AtomContext *ctx) {
   } else if (ctx->format_string() != nullptr) {
     return visit(ctx->format_string());
   }
+  return std::pair<std::string, int>("None", 0);
 }
 
 std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
@@ -995,7 +938,7 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
     } else { // Testlist case
       std::any res =
           std::any_cast<std::vector<std::any>>(visit(ctx->testlist(pos2)))[0];
-      CheckVariable(res);
+      VariableToVal(res);
       ans += AnyToString(res);
       pos2++;
     }
@@ -1014,7 +957,7 @@ std::any EvalVisitor::visitFormat_string(Parser::Format_stringContext *ctx) {
   while (pos2 < testlist_sz) { // Testlist case
     std::any res =
         std::any_cast<std::vector<std::any>>(visit(ctx->testlist(pos2)))[0];
-    CheckVariable(res);
+    VariableToVal(res);
     ans += AnyToString(res);
     pos2++;
   }
@@ -1054,13 +997,13 @@ std::any EvalVisitor::visitArgument(Parser::ArgumentContext *ctx) {
   int sz = test_vector.size();
   if (sz == 1) {
     std::any ans = visit(test_vector[0]);
-    CheckVariable(ans);
+    VariableToVal(ans);
     return ans;
   } else {
     // Resolve assign operator
     // We cannot set value here, in case of "foo(a = 1, b = 2)"
     std::any ans = visit(test_vector[1]);
-    CheckVariable(ans);
+    VariableToVal(ans);
     return std::pair(visit(test_vector[0]), ans);
   }
 }
