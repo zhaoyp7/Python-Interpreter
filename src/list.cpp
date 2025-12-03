@@ -1,7 +1,7 @@
 #include "Evalvisitor.h"
 
 std::any EvalVisitor::visitTestlist(Parser::TestlistContext *ctx) {
-  std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
+  std::vector<Parser::TestContext *> test_vector = ctx->test();
   std::vector<std::any> ans;
   for (int i = 0; i < test_vector.size(); i++) {
     ans.push_back(visit(test_vector[i]));
@@ -10,8 +10,7 @@ std::any EvalVisitor::visitTestlist(Parser::TestlistContext *ctx) {
 }
 
 std::any EvalVisitor::visitArglist(Parser::ArglistContext *ctx) {
-  std::vector<Python3Parser::ArgumentContext *> argument_vector =
-      ctx->argument();
+  std::vector<Parser::ArgumentContext *> argument_vector = ctx->argument();
   int sz = argument_vector.size();
   std::vector<std::any> ans;
   for (int i = 0; i < sz; i++) {
@@ -29,7 +28,7 @@ std::any EvalVisitor::visitArglist(Parser::ArglistContext *ctx) {
 }
 
 std::any EvalVisitor::visitArgument(Parser::ArgumentContext *ctx) {
-  std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
+  std::vector<Parser::TestContext *> test_vector = ctx->test();
   int sz = test_vector.size();
   if (sz == 1) {
     std::any ans = visit(test_vector[0]);

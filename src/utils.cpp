@@ -118,7 +118,6 @@ std::string EvalVisitor::DoubleToString(double val) {
 
 void EvalVisitor::VariableToVal(std::any &tmp) {
   if (tmp.type() == typeid(std::pair<std::string, int>)) {
-    // puts("this this");
     std::pair<std::string, int> temp =
         std::any_cast<std::pair<std::string, int>>(tmp);
     if (temp.second == 0) {

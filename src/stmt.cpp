@@ -21,7 +21,7 @@ std::any EvalVisitor::visitSmall_stmt(Parser::Small_stmtContext *ctx) {
 }
 
 std::any EvalVisitor::visitExpr_stmt(Parser::Expr_stmtContext *ctx) {
-  std::vector<Python3Parser::TestlistContext *> testlist_vector =
+  std::vector<Parser::TestlistContext *> testlist_vector =
       ctx->testlist();
   int sz = testlist_vector.size();
 

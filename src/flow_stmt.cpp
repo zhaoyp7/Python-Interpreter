@@ -53,8 +53,8 @@ std::any EvalVisitor::visitCompound_stmt(Parser::Compound_stmtContext *ctx) {
 }
 
 std::any EvalVisitor::visitIf_stmt(Parser::If_stmtContext *ctx) {
-  std::vector<Python3Parser::TestContext *> test_vector = ctx->test();
-  std::vector<Python3Parser::SuiteContext *> suite_vector = ctx->suite();
+  std::vector<Parser::TestContext *> test_vector = ctx->test();
+  std::vector<Parser::SuiteContext *> suite_vector = ctx->suite();
   for (int i = 0; i < (int)test_vector.size(); i++) {
     std::any tmp = visit(test_vector[i]);
     if (AnyToBool(tmp)) {

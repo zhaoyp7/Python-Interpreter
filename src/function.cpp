@@ -41,21 +41,12 @@ void EvalVisitor::InitFunction(std::string name, std::vector<std::any> val) {
 }
 
 std::any EvalVisitor::visitFuncdef(Parser::FuncdefContext *ctx) {
-  // build functions[name]
-  // puts("enter : Funcdef");
   Function function;
   std::string name = ctx->NAME()->getText();
-  // std::cout << "name is " << name << '\n';
-  // puts("QwQ");
   function.parameter_list =
       std::any_cast<std::vector<Parameter>>(visit(ctx->parameters()));
-  // int sz = function.parameter_list.size();
-  // printf("sz = %d\n",sz);
-  // puts("QwQ");
   function.suite = ctx->suite();
-  // puts("QwQ");
   functions[name] = function;
-  // puts("QwQ");
   return std::pair<std::string, int>("None", 0);
 }
 
